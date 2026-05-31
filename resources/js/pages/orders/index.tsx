@@ -1,13 +1,13 @@
-import * as React from 'react';
 import { Head, Link, useForm } from '@inertiajs/react';
 import { Search, Download, Plus, ChevronLeft, ChevronRight, Edit3, Trash2 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Badge } from '@/components/ui/badge';
-import { Checkbox } from '@/components/ui/checkbox';
+import * as React from 'react';
 import { useCurrency } from '@/components/currency-context';
 import { useLanguage } from '@/components/language-context';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Input } from '@/components/ui/input';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 
 interface OrderItem {
     id: string;
@@ -39,6 +39,7 @@ export default function OrdersIndex({ orders }: OrdersProps) {
                 order.customer_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
                 order.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
                 order.sales_rep.toLowerCase().includes(searchQuery.toLowerCase());
+
             return matchesStatus && matchesSearch;
         });
     }, [orders, statusFilter, searchQuery]);
@@ -114,6 +115,7 @@ export default function OrdersIndex({ orders }: OrdersProps) {
                             const tabLabel = tab === 'All' ? t('Semua', 'All') :
                                              tab === 'Pending' ? t('Tertunda', 'Pending') :
                                              tab === 'Validated' ? t('Valid', 'Validated') : t('Ditolak', 'Rejected');
+
                             return (
                                 <button
                                     key={tab}

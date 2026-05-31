@@ -1,10 +1,10 @@
-import * as React from 'react';
 import { Head } from '@inertiajs/react';
 import { Award, Package } from 'lucide-react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import * as React from 'react';
 import { useCurrency } from '@/components/currency-context';
 import { useLanguage } from '@/components/language-context';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 
 interface RepPerformance {
     name: string;

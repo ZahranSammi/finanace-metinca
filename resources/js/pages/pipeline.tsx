@@ -1,11 +1,11 @@
-import * as React from 'react';
 import { Head } from '@inertiajs/react';
-import { GitFork, DollarSign, Briefcase, Plus, User, ArrowRight } from 'lucide-react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
+import { User, ArrowRight } from 'lucide-react';
+import * as React from 'react';
 import { useCurrency } from '@/components/currency-context';
 import { useLanguage } from '@/components/language-context';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 interface Deal {
     id: string;
@@ -43,14 +43,18 @@ export default function Pipeline({ pipeline: initialPipeline }: PipelineProps) {
     const moveDeal = (dealId: string, currentStage: StageKey, direction: 'left' | 'right') => {
         const stages: StageKey[] = ['prospect', 'proposal', 'negotiation', 'closed_won'];
         const currentIdx = stages.indexOf(currentStage);
-        let nextIdx = currentIdx + (direction === 'right' ? 1 : -1);
+        const nextIdx = currentIdx + (direction === 'right' ? 1 : -1);
 
-        if (nextIdx < 0 || nextIdx >= stages.length) return;
+        if (nextIdx < 0 || nextIdx >= stages.length) {
+return;
+}
 
         const targetStage = stages[nextIdx];
         const dealToMove = pipeline[currentStage].find(d => d.id === dealId);
         
-        if (!dealToMove) return;
+        if (!dealToMove) {
+return;
+}
 
         setPipeline(prev => ({
             ...prev,
@@ -60,14 +64,14 @@ export default function Pipeline({ pipeline: initialPipeline }: PipelineProps) {
     };
 
     // Calculate pipeline value summaries
-    const stageSum = (stage: StageKey) => {
+    const stageSum = React.useCallback((stage: StageKey) => {
         return pipeline[stage].reduce((sum, d) => sum + d.value, 0);
-    };
+    }, [pipeline]);
 
     const totalPipelineValue = React.useMemo(() => {
         return (['prospect', 'proposal', 'negotiation', 'closed_won'] as StageKey[])
             .reduce((sum, stage) => sum + stageSum(stage), 0);
-    }, [pipeline]);
+    }, [stageSum]);
 
     return (
         <>

@@ -1,7 +1,7 @@
 import { Head, Link, usePage } from '@inertiajs/react';
-import { dashboard, login, register } from '@/routes';
 import { ShoppingCart, BarChart3, GitFork, Package, Users, ArrowRight, ShieldCheck, Sparkles } from 'lucide-react';
 import { useLanguage } from '@/components/language-context';
+import { dashboard, login, register } from '@/routes';
 
 export default function Welcome() {
     const { auth } = usePage().props;

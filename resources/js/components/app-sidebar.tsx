@@ -1,9 +1,9 @@
-import * as React from 'react';
 import { Link } from '@inertiajs/react';
 import { BookOpen, FolderGit2, LayoutGrid, ShoppingCart, BarChart3, GitFork, Package, Users, Globe, Languages } from 'lucide-react';
+import * as React from 'react';
+import AppLogo from '@/components/app-logo';
 import { useCurrency } from '@/components/currency-context';
 import { useLanguage } from '@/components/language-context';
-import AppLogo from '@/components/app-logo';
 import { NavFooter } from '@/components/nav-footer';
 import { NavMain } from '@/components/nav-main';
 import { NavUser } from '@/components/nav-user';

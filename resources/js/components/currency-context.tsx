@@ -16,13 +16,16 @@ export function CurrencyProvider({ children }: { children: React.ReactNode }) {
     const [currency, setCurrencyState] = React.useState<Currency>(() => {
         if (typeof window !== 'undefined') {
             const saved = localStorage.getItem('sales_portal_currency');
+
             return (saved as Currency) || 'USD';
         }
+
         return 'USD';
     });
 
     const setCurrency = (newCurrency: Currency) => {
         setCurrencyState(newCurrency);
+
         if (typeof window !== 'undefined') {
             localStorage.setItem('sales_portal_currency', newCurrency);
         }
@@ -31,6 +34,7 @@ export function CurrencyProvider({ children }: { children: React.ReactNode }) {
     const formatPrice = (amountInUsd: number) => {
         if (currency === 'IDR') {
             const idrAmount = amountInUsd * EXCHANGE_RATE;
+
             return new Intl.NumberFormat('id-ID', {
                 style: 'currency',
                 currency: 'IDR',
@@ -56,8 +60,10 @@ export function CurrencyProvider({ children }: { children: React.ReactNode }) {
 
 export function useCurrency() {
     const context = React.useContext(CurrencyContext);
+
     if (!context) {
         throw new Error('useCurrency must be used within a CurrencyProvider');
     }
+
     return context;
 }

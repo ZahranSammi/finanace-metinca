@@ -1,10 +1,10 @@
 import { Head, Link } from '@inertiajs/react';
-import { LayoutGrid, ShoppingCart, Clock, CheckCircle2, TrendingUp, ArrowUpRight, DollarSign } from 'lucide-react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
+import { ShoppingCart, Clock, CheckCircle2, TrendingUp, ArrowUpRight, DollarSign } from 'lucide-react';
 import { useCurrency } from '@/components/currency-context';
 import { useLanguage } from '@/components/language-context';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
 interface MetricProps {
     total_sales: number;
@@ -113,6 +113,7 @@ export default function Dashboard({ metrics, chart_data, recent_orders }: Dashbo
                         <CardContent className="h-[300px] flex items-end justify-between gap-2 pt-4 px-6 pb-2">
                             {chart_data.map((item, idx) => {
                                 const heightPercent = (item.sales / 6500) * 100;
+
                                 return (
                                     <div key={idx} className="flex flex-col items-center flex-1 h-full justify-end group">
                                         <div className="relative w-full flex justify-center">

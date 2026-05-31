@@ -1,12 +1,12 @@
-import * as React from 'react';
 import { Head } from '@inertiajs/react';
-import { Package, Search, Plus, Filter, AlertTriangle } from 'lucide-react';
+import { Search, AlertTriangle } from 'lucide-react';
+import * as React from 'react';
+import { useCurrency } from '@/components/currency-context';
+import { useLanguage } from '@/components/language-context';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Badge } from '@/components/ui/badge';
-import { useCurrency } from '@/components/currency-context';
-import { useLanguage } from '@/components/language-context';
 
 interface Product {
     id: number;
@@ -28,6 +28,7 @@ export default function Inventory({ products }: InventoryProps) {
 
     const categories = React.useMemo(() => {
         const cats = new Set(products.map(p => p.category));
+
         return ['All', ...Array.from(cats)];
     }, [products]);
 
@@ -36,6 +37,7 @@ export default function Inventory({ products }: InventoryProps) {
             const matchesCategory = selectedCategory === 'All' || p.category === selectedCategory;
             const matchesSearch = p.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
                                  p.category.toLowerCase().includes(searchQuery.toLowerCase());
+
             return matchesCategory && matchesSearch;
         });
     }, [products, selectedCategory, searchQuery]);
@@ -94,6 +96,7 @@ export default function Inventory({ products }: InventoryProps) {
                         <TableBody>
                             {filteredProducts.map((p) => {
                                 const isLowStock = p.stock <= 25;
+
                                 return (
                                     <TableRow key={p.id}>
                                         <TableCell className="font-semibold text-muted-foreground">#{p.id}</TableCell>

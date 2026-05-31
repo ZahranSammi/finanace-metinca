@@ -1,11 +1,10 @@
-import * as React from 'react';
 import { Head } from '@inertiajs/react';
-import { Users, Search, Mail, ShoppingBag } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Search, Mail, ShoppingBag } from 'lucide-react';
+import * as React from 'react';
 import { useCurrency } from '@/components/currency-context';
 import { useLanguage } from '@/components/language-context';
+import { Input } from '@/components/ui/input';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 
 interface Customer {
     id: number;

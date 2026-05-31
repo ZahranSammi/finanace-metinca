@@ -1,13 +1,13 @@
-import * as React from 'react';
 import { Head, Link, useForm } from '@inertiajs/react';
 import { Plus, Trash2, ArrowLeft, Save } from 'lucide-react';
+import * as React from 'react';
+import { useCurrency } from '@/components/currency-context';
+import { useLanguage } from '@/components/language-context';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { useCurrency } from '@/components/currency-context';
-import { useLanguage } from '@/components/language-context';
 
 interface Customer {
     id: number;
@@ -37,7 +37,7 @@ interface OrderLineItem {
 export default function CreateOrder({ customers, products }: CreateOrderProps) {
     const { formatPrice } = useCurrency();
     const { t } = useLanguage();
-    const { data, setData, post, processing, errors } = useForm({
+    const { data, setData, post, processing } = useForm({
         customerId: customers[0]?.id || 0,
         salesRep: 'J. Smith',
         items: [] as OrderLineItem[],
@@ -48,10 +48,14 @@ export default function CreateOrder({ customers, products }: CreateOrderProps) {
 
     const handleAddItem = () => {
         const product = products.find(p => p.id === selectedProductId);
-        if (!product) return;
+
+        if (!product) {
+return;
+}
 
         // Check if item already exists
         const existingIdx = data.items.findIndex(item => item.productId === selectedProductId);
+
         if (existingIdx > -1) {
             const updatedItems = [...data.items];
             updatedItems[existingIdx].quantity += selectedQty;
@@ -205,6 +209,7 @@ export default function CreateOrder({ customers, products }: CreateOrderProps) {
                                         ) : (
                                             data.items.map((item, index) => {
                                                 const product = products.find(p => p.id === item.productId);
+
                                                 return (
                                                     <TableRow key={index}>
                                                         <TableCell className="font-medium">{product?.name || 'Unknown'}</TableCell>

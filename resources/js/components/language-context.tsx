@@ -14,13 +14,16 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
     const [language, setLanguageState] = React.useState<Language>(() => {
         if (typeof window !== 'undefined') {
             const saved = localStorage.getItem('sales_portal_language');
+
             return (saved as Language) || 'id'; // Default to Indonesian
         }
+
         return 'id';
     });
 
     const setLanguage = (newLanguage: Language) => {
         setLanguageState(newLanguage);
+
         if (typeof window !== 'undefined') {
             localStorage.setItem('sales_portal_language', newLanguage);
         }
@@ -39,8 +42,10 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
 
 export function useLanguage() {
     const context = React.useContext(LanguageContext);
+
     if (!context) {
         throw new Error('useLanguage must be used within a LanguageProvider');
     }
+
     return context;
 }
