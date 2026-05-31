@@ -182,7 +182,7 @@ export default function OrdersIndex({ orders }: OrdersProps) {
                                             />
                                         </TableCell>
                                         <TableCell className="font-semibold text-primary hover:underline">
-                                            <Link href={`/orders/${order.id}`}>
+                                            <Link href={`/orders/${order.id}/edit`}>
                                                 {order.id}
                                             </Link>
                                         </TableCell>
