@@ -6,7 +6,6 @@ test('guests are redirected from sales portal routes', function () {
     $this->get('/orders')->assertRedirect(route('login'));
     $this->get('/orders/create')->assertRedirect(route('login'));
     $this->get('/pipeline')->assertRedirect(route('login'));
-    $this->get('/inventory')->assertRedirect(route('login'));
     $this->get('/customers')->assertRedirect(route('login'));
     $this->get('/analytics')->assertRedirect(route('login'));
 });
@@ -18,7 +17,6 @@ test('authenticated users can access sales portal pages', function () {
     $this->get('/orders')->assertOk();
     $this->get('/orders/create')->assertOk();
     $this->get('/pipeline')->assertOk();
-    $this->get('/inventory')->assertOk();
     $this->get('/customers')->assertOk();
     $this->get('/analytics')->assertOk();
 });

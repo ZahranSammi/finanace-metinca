@@ -17,8 +17,15 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::delete('orders/{id}', [SalesPortalController::class, 'destroyOrder'])->name('orders.destroy');
     
     Route::get('pipeline', [SalesPortalController::class, 'pipeline'])->name('pipeline');
-    Route::get('inventory', [SalesPortalController::class, 'inventory'])->name('inventory');
-    Route::get('customers', [SalesPortalController::class, 'customers'])->name('customers');
+    
+    // Customer CRUD Routes
+    Route::get('customers', [SalesPortalController::class, 'customers'])->name('customers.index');
+    Route::get('customers/create', [SalesPortalController::class, 'createCustomer'])->name('customers.create');
+    Route::post('customers', [SalesPortalController::class, 'storeCustomer'])->name('customers.store');
+    Route::get('customers/{id}/edit', [SalesPortalController::class, 'editCustomer'])->name('customers.edit');
+    Route::put('customers/{id}', [SalesPortalController::class, 'updateCustomer'])->name('customers.update');
+    Route::delete('customers/{id}', [SalesPortalController::class, 'destroyCustomer'])->name('customers.destroy');
+    
     Route::get('analytics', [SalesPortalController::class, 'analytics'])->name('analytics');
 });
 

@@ -1,5 +1,5 @@
 import { Link } from '@inertiajs/react';
-import { BookOpen, FolderGit2, LayoutGrid, ShoppingCart, BarChart3, GitFork, Package, Users, Globe, Languages } from 'lucide-react';
+import { BookOpen, FolderGit2, LayoutGrid, ShoppingCart, BarChart3, GitFork, Package, Users, Globe, Languages, ClipboardList } from 'lucide-react';
 import * as React from 'react';
 import AppLogo from '@/components/app-logo';
 import { useCurrency } from '@/components/currency-context';
@@ -24,6 +24,7 @@ interface RawNavItem {
     titleEn: string;
     href: string;
     icon: typeof LayoutGrid;
+    badge?: number;
 }
 
 const mainNavItemsRaw: RawNavItem[] = [
@@ -50,12 +51,6 @@ const mainNavItemsRaw: RawNavItem[] = [
         titleEn: 'Sales Pipeline',
         href: '/pipeline',
         icon: GitFork,
-    },
-    {
-        titleId: 'Inventaris',
-        titleEn: 'Inventory',
-        href: '/inventory',
-        icon: Package,
     },
     {
         titleId: 'Pelanggan',
@@ -86,7 +81,8 @@ export function AppSidebar() {
         return mainNavItemsRaw.map(item => ({
             title: t(item.titleId, item.titleEn),
             href: item.href,
-            icon: item.icon
+            icon: item.icon,
+            badge: item.badge
         }));
     }, [t]);
 
