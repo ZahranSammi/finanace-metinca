@@ -19,12 +19,15 @@ import {
 import { dashboard } from '@/routes';
 import type { NavItem } from '@/types';
 
+import { usePage } from '@inertiajs/react';
+
 interface RawNavItem {
     titleId: string;
     titleEn: string;
     href: string;
     icon: typeof LayoutGrid;
     badge?: number;
+    roles?: string[];
 }
 
 const mainNavItemsRaw: RawNavItem[] = [
@@ -35,28 +38,46 @@ const mainNavItemsRaw: RawNavItem[] = [
         icon: LayoutGrid,
     },
     {
-        titleId: 'Analisis',
-        titleEn: 'Analytics',
+        titleId: 'Analisis & Laporan',
+        titleEn: 'Analytics & Reports',
         href: '/analytics',
         icon: BarChart3,
+        roles: ['manager'],
+    },
+    {
+        titleId: 'Kotak Masuk Validasi',
+        titleEn: 'Validation Inbox',
+        href: '/accounting/inbox',
+        icon: ClipboardList,
+        roles: ['staff_accounting'],
+    },
+    {
+        titleId: 'Rekap Penjualan',
+        titleEn: 'Sales Recap',
+        href: '/accounting/rekap',
+        icon: Package,
+        roles: ['staff_accounting'],
     },
     {
         titleId: 'Entri Pesanan',
         titleEn: 'Order Entry',
         href: '/orders',
         icon: ShoppingCart,
+        roles: ['staff_sales', 'staff_accounting', 'manager'],
     },
     {
         titleId: 'Pipeline Penjualan',
         titleEn: 'Sales Pipeline',
         href: '/pipeline',
         icon: GitFork,
+        roles: ['staff_sales'],
     },
     {
         titleId: 'Pelanggan',
         titleEn: 'Customers',
         href: '/customers',
         icon: Users,
+        roles: ['staff_sales', 'staff_accounting', 'manager'],
     },
 ];
 
@@ -76,15 +97,21 @@ const footerNavItems: NavItem[] = [
 export function AppSidebar() {
     const { currency, setCurrency } = useCurrency();
     const { language, setLanguage, t } = useLanguage();
+    const { auth } = usePage().props as any;
 
     const mainNavItems = React.useMemo<NavItem[]>(() => {
-        return mainNavItemsRaw.map(item => ({
-            title: t(item.titleId, item.titleEn),
-            href: item.href,
-            icon: item.icon,
-            badge: item.badge
-        }));
-    }, [t]);
+        const user = auth?.user;
+        const role = user?.role || 'staff_sales';
+
+        return mainNavItemsRaw
+            .filter(item => !item.roles || item.roles.includes(role))
+            .map(item => ({
+                title: t(item.titleId, item.titleEn),
+                href: item.href,
+                icon: item.icon,
+                badge: item.badge
+            }));
+    }, [t, auth]);
 
     return (
         <Sidebar collapsible="icon" variant="inset">

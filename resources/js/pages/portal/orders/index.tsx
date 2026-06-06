@@ -1,5 +1,5 @@
-import { Head, Link, useForm } from '@inertiajs/react';
-import { Search, Download, Plus, ChevronLeft, ChevronRight, Edit3, Trash2 } from 'lucide-react';
+import { Head, Link, useForm, usePage } from '@inertiajs/react';
+import { Search, Download, Plus, ChevronLeft, ChevronRight, Edit3, Trash2, Send, Printer } from 'lucide-react';
 import * as React from 'react';
 import { useCurrency } from '@/components/currency-context';
 import { useLanguage } from '@/components/language-context';
@@ -14,7 +14,7 @@ interface OrderItem {
     date_raised: string;
     customer_name: string;
     sales_rep: string;
-    status: 'Pending' | 'Validated' | 'Rejected';
+    status: 'Pending' | 'Submitted' | 'Validated' | 'Rejected';
     total_amount: number;
 }
 
@@ -22,12 +22,15 @@ interface OrdersProps {
     orders: OrderItem[];
 }
 
-type FilterStatus = 'All' | 'Pending' | 'Validated' | 'Rejected';
+type FilterStatus = 'All' | 'Pending' | 'Submitted' | 'Validated' | 'Rejected';
 
 export default function OrdersIndex({ orders }: OrdersProps) {
     const { formatPrice } = useCurrency();
     const { t } = useLanguage();
-    const { delete: destroy } = useForm();
+    const { delete: destroy, post } = useForm();
+    const { auth } = usePage().props as any;
+    const isSales = auth?.user?.role === 'staff_sales';
+
     const [statusFilter, setStatusFilter] = React.useState<FilterStatus>('All');
     const [searchQuery, setSearchQuery] = React.useState('');
     const [selectedOrders, setSelectedOrders] = React.useState<string[]>([]);
@@ -60,7 +63,6 @@ export default function OrdersIndex({ orders }: OrdersProps) {
         }
     };
 
-    // Export mock action
     const handleExport = () => {
         const headers = ['Order ID', 'Date Raised', 'Customer Name', 'Sales Rep', 'Status', 'Total Amount'];
         const rows = filteredOrders.map(o => [
@@ -84,6 +86,80 @@ export default function OrdersIndex({ orders }: OrdersProps) {
         }
     };
 
+    const handleSubmitOrder = (orderId: string) => {
+        if (confirm(t(`Apakah Anda yakin ingin mengirim pesanan ${orderId} ke Akuntansi?`, `Are you sure you want to submit order ${orderId} to Accounting?`))) {
+            post(`/orders/${orderId}/submit`);
+        }
+    };
+
+    const handlePrintInvoice = (order: OrderItem) => {
+        const printWindow = window.open('', '_blank');
+        if (!printWindow) return;
+
+        printWindow.document.write(`
+            <html>
+                <head>
+                    <title>Invoice ${order.id}</title>
+                    <style>
+                        body { font-family: sans-serif; padding: 40px; color: #333; }
+                        .header { display: flex; justify-content: space-between; border-bottom: 2px solid #ddd; padding-bottom: 20px; }
+                        .title { font-size: 24px; font-weight: bold; }
+                        .details { margin: 20px 0; line-height: 1.6; }
+                        .table { width: 100%; border-collapse: collapse; margin-top: 30px; }
+                        .table th, .table td { border: 1px solid #ddd; padding: 12px; text-align: left; }
+                        .table th { background-color: #f5f5f5; }
+                        .total { text-align: right; font-size: 18px; font-weight: bold; margin-top: 20px; }
+                        .footer { margin-top: 50px; text-align: center; font-size: 12px; color: #777; border-top: 1px solid #ddd; padding-top: 20px; }
+                        @media print {
+                            body { padding: 0; }
+                        }
+                    </style>
+                </head>
+                <body>
+                    <div class="header">
+                        <div>
+                            <div class="title">INVOICE & BUKTI PESANAN</div>
+                            <div>Order ID: ${order.id}</div>
+                        </div>
+                        <div style="text-align: right;">
+                            <strong>Metinca Finance</strong><br/>
+                            Date: ${order.date_raised}
+                        </div>
+                    </div>
+                    <div class="details">
+                        <strong>Customer:</strong> ${order.customer_name}<br/>
+                        <strong>Sales Rep:</strong> ${order.sales_rep}<br/>
+                        <strong>Status:</strong> ${order.status}
+                    </div>
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Description</th>
+                                <th style="text-align: right;">Amount</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Sales Order Items Total Value (inc. tax/fees)</td>
+                                <td style="text-align: right;">${formatPrice(order.total_amount)}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <div class="total">
+                        Total Amount: ${formatPrice(order.total_amount)}
+                    </div>
+                    <div class="footer">
+                        Thank you for your business! &bull; Metinca Finance System
+                    </div>
+                    <script>
+                        window.onload = function() { window.print(); }
+                    </script>
+                </body>
+            </html>
+        `);
+        printWindow.document.close();
+    };
+
     return (
         <>
             <Head title={t('Manajemen Pesanan', 'Order Management')} />
@@ -97,11 +173,13 @@ export default function OrdersIndex({ orders }: OrdersProps) {
                         <Button variant="outline" onClick={handleExport} className="flex items-center gap-1">
                             <Download className="size-4" /> {t('Ekspor', 'Export')}
                         </Button>
-                        <Button asChild className="flex items-center gap-1">
-                            <Link href="/orders/create">
-                                <Plus className="size-4" /> {t('Pesanan Baru', 'New Order')}
-                            </Link>
-                        </Button>
+                        {isSales && (
+                            <Button asChild className="flex items-center gap-1">
+                                <Link href="/orders/create">
+                                    <Plus className="size-4" /> {t('Pesanan Baru', 'New Order')}
+                                </Link>
+                            </Button>
+                        )}
                     </div>
                 </div>
 
@@ -109,12 +187,13 @@ export default function OrdersIndex({ orders }: OrdersProps) {
                 <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between border-b pb-4">
                     {/* Status Tabs */}
                     <div className="flex flex-wrap gap-1 bg-muted p-1 rounded-lg">
-                        {(['All', 'Pending', 'Validated', 'Rejected'] as FilterStatus[]).map((tab) => {
+                        {(['All', 'Pending', 'Submitted', 'Validated', 'Rejected'] as FilterStatus[]).map((tab) => {
                             const isActive = statusFilter === tab;
                             const count = tab === 'All' ? orders.length : orders.filter(o => o.status === tab).length;
                             const tabLabel = tab === 'All' ? t('Semua', 'All') :
-                                             tab === 'Pending' ? t('Tertunda', 'Pending') :
-                                             tab === 'Validated' ? t('Valid', 'Validated') : t('Ditolak', 'Rejected');
+                                             tab === 'Pending' ? t('Draft', 'Draft') :
+                                             tab === 'Submitted' ? t('Dikirim', 'Submitted') :
+                                             tab === 'Validated' ? t('Disetujui', 'Validated') : t('Ditolak', 'Rejected');
 
                             return (
                                 <button
@@ -162,7 +241,7 @@ export default function OrdersIndex({ orders }: OrdersProps) {
                                 <TableHead>{t('Sales Rep', 'Sales Rep')}</TableHead>
                                 <TableHead>Status</TableHead>
                                 <TableHead className="text-right">{t('Total Nilai', 'Total Amount')}</TableHead>
-                                <TableHead className="text-center w-[120px]">{t('Aksi', 'Actions')}</TableHead>
+                                <TableHead className="text-center w-[160px]">{t('Aksi', 'Actions')}</TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
@@ -173,50 +252,91 @@ export default function OrdersIndex({ orders }: OrdersProps) {
                                     </TableCell>
                                 </TableRow>
                             ) : (
-                                filteredOrders.map((order) => (
-                                    <TableRow key={order.id}>
-                                        <TableCell>
-                                            <Checkbox
-                                                checked={selectedOrders.includes(order.id)}
-                                                onCheckedChange={(checked) => handleSelectOrder(order.id, !!checked)}
-                                            />
-                                        </TableCell>
-                                        <TableCell className="font-semibold text-primary hover:underline">
-                                            <Link href={`/orders/${order.id}/edit`}>
-                                                {order.id}
-                                            </Link>
-                                        </TableCell>
-                                        <TableCell>{order.date_raised}</TableCell>
-                                        <TableCell className="font-medium">{order.customer_name}</TableCell>
-                                        <TableCell>{order.sales_rep}</TableCell>
-                                        <TableCell>
-                                            <Badge variant={
-                                                order.status === 'Validated' ? 'default' :
-                                                order.status === 'Pending' ? 'secondary' : 'destructive'
-                                            }>
-                                                {t(order.status === 'Validated' ? 'Valid' : order.status === 'Pending' ? 'Tertunda' : 'Ditolak', order.status)}
-                                            </Badge>
-                                        </TableCell>
-                                        <TableCell className="text-right font-bold text-slate-800 dark:text-zinc-200">
-                                            {formatPrice(order.total_amount)}
-                                        </TableCell>
-                                        <TableCell className="text-center flex justify-center gap-1.5">
-                                            <Button variant="ghost" size="icon" asChild className="size-8 text-neutral-600 hover:text-neutral-900 dark:text-zinc-400 dark:hover:text-zinc-100">
-                                                <Link href={`/orders/${order.id}/edit`}>
-                                                    <Edit3 className="size-4" />
-                                                </Link>
-                                            </Button>
-                                            <Button 
-                                                variant="ghost" 
-                                                size="icon" 
-                                                className="size-8 text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950/20"
-                                                onClick={() => handleDeleteOrder(order.id)}
-                                            >
-                                                <Trash2 className="size-4" />
-                                            </Button>
-                                        </TableCell>
-                                    </TableRow>
-                                ))
+                                filteredOrders.map((order) => {
+                                    const canModify = isSales && (order.status === 'Pending' || order.status === 'Rejected');
+                                    return (
+                                        <TableRow key={order.id}>
+                                            <TableCell>
+                                                <Checkbox
+                                                    checked={selectedOrders.includes(order.id)}
+                                                    onCheckedChange={(checked) => handleSelectOrder(order.id, !!checked)}
+                                                />
+                                            </TableCell>
+                                            <TableCell className="font-semibold text-primary hover:underline">
+                                                {canModify ? (
+                                                    <Link href={`/orders/${order.id}/edit`}>
+                                                        {order.id}
+                                                    </Link>
+                                                ) : (
+                                                    <span>{order.id}</span>
+                                                )}
+                                            </TableCell>
+                                            <TableCell>{order.date_raised}</TableCell>
+                                            <TableCell className="font-medium">{order.customer_name}</TableCell>
+                                            <TableCell>{order.sales_rep}</TableCell>
+                                            <TableCell>
+                                                <Badge variant={
+                                                    order.status === 'Validated' ? 'default' :
+                                                    order.status === 'Submitted' ? 'outline' :
+                                                    order.status === 'Pending' ? 'secondary' : 'destructive'
+                                                } className={
+                                                    order.status === 'Submitted' 
+                                                        ? 'border-blue-500 text-blue-500 bg-blue-50 dark:bg-blue-950/20' 
+                                                        : ''
+                                                }>
+                                                    {t(
+                                                        order.status === 'Validated' ? 'Disetujui' : 
+                                                        order.status === 'Submitted' ? 'Dikirim' : 
+                                                        order.status === 'Pending' ? 'Draft' : 'Ditolak', 
+                                                        order.status
+                                                    )}
+                                                </Badge>
+                                            </TableCell>
+                                            <TableCell className="text-right font-bold text-slate-800 dark:text-zinc-200">
+                                                {formatPrice(order.total_amount)}
+                                            </TableCell>
+                                            <TableCell className="text-center flex justify-center items-center gap-1.5">
+                                                {canModify && (
+                                                    <>
+                                                        <Button 
+                                                            variant="ghost" 
+                                                            size="icon" 
+                                                            className="size-8 text-blue-500 hover:text-blue-700"
+                                                            title={t('Kirim ke Akuntansi', 'Submit to Accounting')}
+                                                            onClick={() => handleSubmitOrder(order.id)}
+                                                        >
+                                                            <Send className="size-4" />
+                                                        </Button>
+                                                        <Button variant="ghost" size="icon" asChild className="size-8 text-neutral-600 hover:text-neutral-900 dark:text-zinc-400 dark:hover:text-zinc-100">
+                                                            <Link href={`/orders/${order.id}/edit`}>
+                                                                <Edit3 className="size-4" />
+                                                            </Link>
+                                                        </Button>
+                                                        <Button 
+                                                            variant="ghost" 
+                                                            size="icon" 
+                                                            className="size-8 text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950/20"
+                                                            onClick={() => handleDeleteOrder(order.id)}
+                                                        >
+                                                            <Trash2 className="size-4" />
+                                                        </Button>
+                                                    </>
+                                                )}
+                                                {order.status === 'Validated' && (
+                                                    <Button 
+                                                        variant="ghost" 
+                                                        size="icon" 
+                                                        className="size-8 text-green-500 hover:text-green-700"
+                                                        title={t('Cetak Bukti', 'Print Invoice')}
+                                                        onClick={() => handlePrintInvoice(order)}
+                                                    >
+                                                        <Printer className="size-4" />
+                                                    </Button>
+                                                )}
+                                            </TableCell>
+                                        </TableRow>
+                                    );
+                                })
                             )}
                         </TableBody>
                     </Table>

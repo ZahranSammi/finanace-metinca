@@ -1,4 +1,4 @@
-import { Head, Link } from '@inertiajs/react';
+import { Head, Link, usePage } from '@inertiajs/react';
 import { ShoppingCart, Clock, CheckCircle2, TrendingUp, ArrowUpRight, DollarSign } from 'lucide-react';
 import { useCurrency } from '@/components/currency-context';
 import { useLanguage } from '@/components/language-context';
@@ -23,7 +23,7 @@ interface OrderItem {
     date_raised: string;
     customer_name: string;
     sales_rep: string;
-    status: 'Pending' | 'Validated' | 'Rejected';
+    status: 'Pending' | 'Submitted' | 'Validated' | 'Rejected';
     total_amount: number;
 }
 
@@ -36,6 +36,8 @@ interface DashboardProps {
 export default function Dashboard({ metrics, chart_data, recent_orders }: DashboardProps) {
     const { formatPrice } = useCurrency();
     const { t } = useLanguage();
+    const { auth } = usePage().props as any;
+    const role = auth?.user?.role || 'staff_sales';
 
     return (
         <>
@@ -43,10 +45,27 @@ export default function Dashboard({ metrics, chart_data, recent_orders }: Dashbo
             <div className="flex flex-1 flex-col gap-6 p-6">
                 <div className="flex items-center justify-between">
                     <div>
-                        <h1 className="text-3xl font-bold tracking-tight">{t('Ringkasan Dasbor', 'Dashboard Overview')}</h1>
-                        <p className="text-muted-foreground text-sm">{t('Monitor metrik penjualan utama dan transaksi pesanan Anda.', 'Monitor your key sales performance and order metrics.')}</p>
+                        <h1 className="text-3xl font-bold tracking-tight">
+                            {role === 'staff_sales' ? t('Dasbor Penjualan', 'Sales Representative Dashboard') :
+                             role === 'staff_accounting' ? t('Dasbor Akuntansi', 'Accounting Dashboard') :
+                             t('Dasbor Manajer', 'Manager Dashboard')}
+                        </h1>
+                        <p className="text-muted-foreground text-sm font-medium">
+                            {role === 'staff_sales' ? t('Monitor pesanan Anda dan status persetujuan transaksi.', 'Monitor your orders and transaction approval status.') :
+                             role === 'staff_accounting' ? t('Validasi pesanan masuk dan awasi rekap penjualan.', 'Validate incoming orders and oversee sales recaps.') :
+                             t('Monitor performa keuangan perusahaan, grafik analitik, dan klasemen perwakilan.', 'Monitor company financial performance, analytical graphs, and standings.')}
+                        </p>
                     </div>
                 </div>
+
+                {role === 'staff_accounting' && metrics.pending_orders > 0 && (
+                    <div className="bg-yellow-500/10 border border-yellow-500/30 text-yellow-700 dark:text-yellow-400 p-4 rounded-lg flex justify-between items-center text-sm font-semibold">
+                        <span>{t(`Terdapat ${metrics.pending_orders} pesanan yang menunggu keputusan validasi Anda.`, `There are ${metrics.pending_orders} orders awaiting your validation decision.`)}</span>
+                        <Button size="sm" variant="outline" asChild className="text-xs bg-transparent hover:bg-yellow-500/20 border-yellow-500/30 text-yellow-700 dark:text-yellow-400">
+                            <Link href="/accounting/inbox">{t('Buka Kotak Masuk', 'Open Inbox')}</Link>
+                        </Button>
+                    </div>
+                )}
 
                 {/* KPI Metrics Grid */}
                 <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
@@ -157,9 +176,19 @@ export default function Dashboard({ metrics, chart_data, recent_orders }: Dashbo
                                         <div className="flex items-center gap-3">
                                             <Badge variant={
                                                 order.status === 'Validated' ? 'default' :
+                                                order.status === 'Submitted' ? 'outline' :
                                                 order.status === 'Pending' ? 'secondary' : 'destructive'
+                                            } className={
+                                                order.status === 'Submitted' 
+                                                    ? 'border-blue-500 text-blue-500 bg-blue-50 dark:bg-blue-950/20' 
+                                                    : ''
                                             }>
-                                                {t(order.status === 'Validated' ? 'Valid' : order.status === 'Pending' ? 'Tertunda' : 'Ditolak', order.status)}
+                                                {t(
+                                                    order.status === 'Validated' ? 'Disetujui' : 
+                                                    order.status === 'Submitted' ? 'Dikirim' : 
+                                                    order.status === 'Pending' ? 'Draft' : 'Ditolak', 
+                                                    order.status
+                                                )}
                                             </Badge>
                                             <span className="text-sm font-semibold">
                                                 {formatPrice(order.total_amount)}

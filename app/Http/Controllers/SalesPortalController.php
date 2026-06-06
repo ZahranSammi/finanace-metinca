@@ -12,34 +12,82 @@ use Inertia\Inertia;
 
 class SalesPortalController extends Controller
 {
-    public function dashboard()
+    public function dashboard(Request $request)
     {
-        $orders = Order::with('customer')->orderBy('date_raised', 'desc')->get();
+        $query = Order::with('customer');
+
+        if ($request->user()->isSales()) {
+            $query->where('sales_rep', $request->user()->name);
+        }
+
+        $orders = $query->orderBy('date_raised', 'desc')->get();
         
-        $totalSales = $orders->sum('total_amount');
+        $totalSales = (double) $orders->where('status', 'Validated')->sum('total_amount');
         $totalOrdersCount = $orders->count();
         $pendingCount = $orders->where('status', 'Pending')->count();
         $validatedCount = $orders->where('status', 'Validated')->count();
 
+        // Trend calculations from DB
+        $isPostgres = DB::connection()->getDriverName() === 'pgsql';
+        if ($isPostgres) {
+            $monthlyTrendsQuery = Order::select(
+                DB::raw("TO_CHAR(date_raised, 'Mon') as month"),
+                DB::raw("EXTRACT(MONTH FROM date_raised) as month_num"),
+                DB::raw("SUM(total_amount) as sales")
+            )
+            ->where('status', 'Validated');
+            
+            if ($request->user()->isSales()) {
+                $monthlyTrendsQuery->where('sales_rep', $request->user()->name);
+            }
+            
+            $monthlyTrendsQuery->groupBy(DB::raw("TO_CHAR(date_raised, 'Mon'), EXTRACT(MONTH FROM date_raised)"))
+                ->orderBy('month_num');
+        } else {
+            $monthlyTrendsQuery = Order::select(
+                DB::raw("strftime('%m', date_raised) as month_num"),
+                DB::raw("SUM(total_amount) as sales")
+            )
+            ->where('status', 'Validated');
+            
+            if ($request->user()->isSales()) {
+                $monthlyTrendsQuery->where('sales_rep', $request->user()->name);
+            }
+            
+            $monthlyTrendsQuery->groupBy('month_num')
+                ->orderBy('month_num');
+        }
+
+        $monthNames = [
+            '01' => 'Jan', '02' => 'Feb', '03' => 'Mar', '04' => 'Apr',
+            '05' => 'May', '06' => 'Jun', '07' => 'Jul', '08' => 'Aug',
+            '09' => 'Sep', '10' => 'Oct', '11' => 'Nov', '12' => 'Dec'
+        ];
+
+        $chartData = $monthlyTrendsQuery->get()->map(fn($item) => [
+            'month' => $isPostgres ? $item->month : ($monthNames[sprintf('%02d', $item->month_num)] ?? $item->month_num),
+            'sales' => (double) $item->sales,
+        ])->toArray();
+
+        if (empty($chartData)) {
+            $chartData = [
+                ['month' => 'Jan', 'sales' => 0],
+                ['month' => 'Feb', 'sales' => 0],
+                ['month' => 'Mar', 'sales' => 0],
+                ['month' => 'Apr', 'sales' => 0],
+                ['month' => 'May', 'sales' => 0],
+                ['month' => 'Jun', 'sales' => 0],
+            ];
+        }
+
         return Inertia::render('portal/dashboard', [
             'metrics' => [
                 'total_sales' => $totalSales,
-                'total_orders' => $totalOrdersCount + 1234,
+                'total_orders' => $totalOrdersCount,
                 'pending_orders' => $pendingCount,
                 'validated_orders' => $validatedCount,
             ],
-            'chart_data' => [
-                ['month' => 'Jan', 'sales' => 4000],
-                ['month' => 'Feb', 'sales' => 3000],
-                ['month' => 'Mar', 'sales' => 2000],
-                ['month' => 'Apr', 'sales' => 2780],
-                ['month' => 'May', 'sales' => 1890],
-                ['month' => 'Jun', 'sales' => 2390],
-                ['month' => 'Jul', 'sales' => 3490],
-                ['month' => 'Aug', 'sales' => 4200],
-                ['month' => 'Sep', 'sales' => 4900],
-                ['month' => 'Oct', 'sales' => $totalSales > 0 ? $totalSales : 6500],
-            ],
+            'chart_data' => $chartData,
             'recent_orders' => $orders->take(5)->map(fn($o) => [
                 'id' => $o->id,
                 'date_raised' => $o->date_raised->format('M d, Y'),
@@ -53,7 +101,13 @@ class SalesPortalController extends Controller
 
     public function orders(Request $request)
     {
-        $orders = Order::with('customer')->orderBy('date_raised', 'desc')->get()->map(fn($o) => [
+        $query = Order::with('customer');
+
+        if ($request->user()->isSales()) {
+            $query->where('sales_rep', $request->user()->name);
+        }
+
+        $orders = $query->orderBy('date_raised', 'desc')->get()->map(fn($o) => [
             'id' => $o->id,
             'date_raised' => $o->date_raised->format('M d, Y'),
             'customer_name' => $o->customer->name,
@@ -112,9 +166,29 @@ class SalesPortalController extends Controller
         });
     }
 
+    public function submitOrder($id)
+    {
+        $order = Order::findOrFail($id);
+
+        if (!in_array($order->status, ['Pending', 'Rejected'])) {
+            return redirect()->back()->with('error', 'Only Pending or Rejected orders can be submitted.');
+        }
+
+        $order->update([
+            'status' => 'Submitted',
+            'submitted_at' => now(),
+        ]);
+
+        return redirect()->route('orders.index')->with('success', 'Order submitted to accounting successfully.');
+    }
+
     public function editOrder($id)
     {
         $order = Order::with('items.product', 'customer')->findOrFail($id);
+
+        if (!in_array($order->status, ['Pending', 'Rejected'])) {
+            abort(403, 'Only Pending or Rejected orders can be edited.');
+        }
 
         return Inertia::render('portal/orders/edit', [
             'order' => [
@@ -126,6 +200,8 @@ class SalesPortalController extends Controller
                     'quantity' => $i->quantity,
                     'price' => $i->price,
                 ]),
+                'status' => $order->status,
+                'validation_notes' => $order->validation_notes,
             ],
             'customers' => Customer::all(),
             'products' => Product::all(),
@@ -141,6 +217,10 @@ class SalesPortalController extends Controller
         ]);
 
         $order = Order::findOrFail($id);
+
+        if (!in_array($order->status, ['Pending', 'Rejected'])) {
+            abort(403, 'Only Pending or Rejected orders can be updated.');
+        }
 
         return DB::transaction(function () use ($request, $order) {
             $subtotal = collect($request->items)->sum(fn($item) => $item['price'] * $item['quantity']);
@@ -170,6 +250,11 @@ class SalesPortalController extends Controller
     public function destroyOrder($id)
     {
         $order = Order::findOrFail($id);
+
+        if (!in_array($order->status, ['Pending', 'Rejected'])) {
+            abort(403, 'Only Pending or Rejected orders can be deleted.');
+        }
+
         $order->delete();
 
         return redirect()->route('orders.index')->with('success', 'Order deleted successfully.');
