@@ -36,4 +36,13 @@ class Order extends Model
     {
         return $this->belongsTo(User::class, 'validated_by');
     }
+
+    protected function casts(): array
+    {
+        return [
+            'date_raised' => 'datetime',
+            'submitted_at' => 'datetime',
+            'validated_at' => 'datetime',
+        ];
+    }
 }
