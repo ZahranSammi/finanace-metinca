@@ -1,4 +1,4 @@
-import { Head, Link, useForm } from '@inertiajs/react';
+import { Head, Link, useForm, usePage } from '@inertiajs/react';
 import { Plus, Trash2, ArrowLeft, Save } from 'lucide-react';
 import * as React from 'react';
 import { useCurrency } from '@/components/currency-context';
@@ -37,9 +37,11 @@ interface OrderLineItem {
 export default function CreateOrder({ customers, products }: CreateOrderProps) {
     const { formatPrice } = useCurrency();
     const { t } = useLanguage();
+    const { auth } = usePage().props as any;
+
     const { data, setData, post, processing } = useForm({
         customerId: customers[0]?.id || 0,
-        salesRep: 'J. Smith',
+        salesRep: auth?.user?.name || '',
         items: [] as OrderLineItem[],
     });
 
