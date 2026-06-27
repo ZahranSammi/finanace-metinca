@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\SalesPortalController;
+use App\Http\Controllers\InvoiceController;
 
 Route::inertia('/', 'welcome')->name('home');
 
@@ -36,6 +37,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('accounting/orders/{id}/validate', [\App\Http\Controllers\AccountingController::class, 'validateOrder'])->name('accounting.validate');
         Route::post('accounting/orders/{id}/reject', [\App\Http\Controllers\AccountingController::class, 'rejectOrder'])->name('accounting.reject');
         Route::get('accounting/rekap', [\App\Http\Controllers\AccountingController::class, 'rekap'])->name('accounting.rekap');
+        
+        Route::get('accounting/invoice-rekap', [InvoiceController::class, 'index'])->name('accounting.invoice_rekap');
+        Route::post('accounting/invoices', [InvoiceController::class, 'store'])->name('accounting.invoices.store');
     });
 
     // Manager actions (restricted to Managers)

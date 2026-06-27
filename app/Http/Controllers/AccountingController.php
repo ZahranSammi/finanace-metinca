@@ -67,7 +67,7 @@ class AccountingController extends Controller
 
     public function rekap()
     {
-        $orders = Order::with('customer', 'validatedBy')
+        $orders = Order::with('customer', 'validatedBy', 'invoice')
             ->where('status', 'Validated')
             ->orderBy('validated_at', 'desc')
             ->get()
@@ -79,6 +79,8 @@ class AccountingController extends Controller
                 'customer_name' => $o->customer->name,
                 'sales_rep' => $o->sales_rep,
                 'total_amount' => $o->total_amount,
+                'has_invoice' => $o->invoice !== null,
+                'invoice_id' => $o->invoice ? 'INV-' . str_pad($o->invoice->id, 5, '0', STR_PAD_LEFT) : null,
             ]);
 
         return Inertia::render('portal/accounting/rekap', [

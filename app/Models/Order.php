@@ -32,6 +32,11 @@ class Order extends Model
         return $this->hasMany(OrderItem::class);
     }
 
+    public function invoice()
+    {
+        return $this->hasOne(Invoice::class);
+    }
+
     public function validatedBy()
     {
         return $this->belongsTo(User::class, 'validated_by');

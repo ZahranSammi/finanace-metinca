@@ -1,5 +1,5 @@
 import { Link } from '@inertiajs/react';
-import { BookOpen, FolderGit2, LayoutGrid, ShoppingCart, BarChart3, GitFork, Package, Users, Globe, Languages, ClipboardList } from 'lucide-react';
+import { LayoutGrid, ShoppingCart, BarChart3, GitFork, Package, Users, Globe, Languages, ClipboardList, FileText } from 'lucide-react';
 import * as React from 'react';
 import AppLogo from '@/components/app-logo';
 import { useCurrency } from '@/components/currency-context';
@@ -59,6 +59,13 @@ const mainNavItemsRaw: RawNavItem[] = [
         roles: ['staff_accounting'],
     },
     {
+        titleId: 'Rekap Invoice PO',
+        titleEn: 'PO Invoice Recap',
+        href: '/accounting/invoice-rekap',
+        icon: FileText,
+        roles: ['staff_accounting'],
+    },
+    {
         titleId: 'Entri Pesanan',
         titleEn: 'Order Entry',
         href: '/orders',
@@ -81,18 +88,7 @@ const mainNavItemsRaw: RawNavItem[] = [
     },
 ];
 
-const footerNavItems: NavItem[] = [
-    {
-        title: 'Repository',
-        href: 'https://github.com/laravel/react-starter-kit',
-        icon: FolderGit2,
-    },
-    {
-        title: 'Documentation',
-        href: 'https://laravel.com/docs/starter-kits#react',
-        icon: BookOpen,
-    },
-];
+const footerNavItems: NavItem[] = [];
 
 export function AppSidebar() {
     const { currency, setCurrency } = useCurrency();
@@ -178,6 +174,16 @@ export function AppSidebar() {
                             USD ($)
                         </button>
                         <button
+                            onClick={() => setCurrency('EUR')}
+                            className={`flex-1 py-1 rounded-sm text-center font-medium transition-all ${
+                                currency === 'EUR' 
+                                    ? 'bg-background text-foreground shadow-sm' 
+                                    : 'text-muted-foreground hover:text-foreground'
+                            }`}
+                        >
+                            EUR (€)
+                        </button>
+                        <button
                             onClick={() => setCurrency('IDR')}
                             className={`flex-1 py-1 rounded-sm text-center font-medium transition-all ${
                                 currency === 'IDR' 
@@ -189,7 +195,7 @@ export function AppSidebar() {
                         </button>
                     </div>
                 </div>
-                <NavFooter items={footerNavItems} className="mt-auto" />
+                {footerNavItems.length > 0 && <NavFooter items={footerNavItems} className="mt-auto" />}
                 <NavUser />
             </SidebarFooter>
         </Sidebar>

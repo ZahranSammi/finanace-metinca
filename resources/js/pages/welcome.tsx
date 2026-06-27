@@ -9,16 +9,16 @@ export default function Welcome() {
 
     return (
         <>
-            <Head title={t('Portal Penjualan - Edisi Enterprise', 'Sales Portal - Enterprise Edition')} />
+            <Head title={t('Metinca Monitoring - Edisi Enterprise', 'Metinca Monitoring - Enterprise Edition')} />
             <div className="min-h-screen bg-slate-50 dark:bg-zinc-950 text-slate-900 dark:text-zinc-50 transition-colors duration-300">
                 {/* Header Navigation */}
                 <header className="border-b border-slate-200/80 dark:border-zinc-800/80 backdrop-blur sticky top-0 bg-white/70 dark:bg-zinc-950/70 z-50">
                     <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
                         <div className="flex items-center gap-2">
                             <div className="bg-primary text-primary-foreground size-9 rounded-lg flex items-center justify-center font-bold text-lg shadow-md shadow-primary/20">
-                                S
+                                M
                             </div>
-                            <span className="font-bold text-lg tracking-tight">Sales Portal <span className="text-xs text-primary font-semibold uppercase tracking-wider px-1.5 py-0.5 rounded bg-primary/10 ml-1">Enterprise</span></span>
+                            <span className="font-bold text-lg tracking-tight">Metinca Monitoring <span className="text-xs text-primary font-semibold uppercase tracking-wider px-1.5 py-0.5 rounded bg-primary/10 ml-1">Enterprise</span></span>
                         </div>
                         <nav className="flex items-center gap-4">
                             {auth.user ? (
@@ -52,7 +52,8 @@ export default function Welcome() {
                 <main className="max-w-7xl mx-auto px-6 pt-16 pb-24">
                     <div className="text-center max-w-3xl mx-auto space-y-6">
                         <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-semibold tracking-wide border border-primary/20">
-                            <Sparkles className="size-3.5" /> {t('Memperkenalkan Sales Portal v2.0', 'Introducing Sales Portal v2.0')}
+                            <img src="" className="hidden" /> {/* keep spacing */}
+                            <Sparkles className="size-3.5" /> {t('Memperkenalkan Metinca Monitoring v2.0', 'Introducing Metinca Monitoring v2.0')}
                         </div>
                         <h1 className="text-4xl sm:text-6xl font-extrabold tracking-tight bg-gradient-to-r from-slate-900 via-primary to-slate-900 dark:from-zinc-100 dark:via-primary dark:to-zinc-100 bg-clip-text text-transparent pb-1">
                             {t('Sistem Informasi Penjualan Modern', 'Modern Sales Information System')}
@@ -154,7 +155,7 @@ export default function Welcome() {
                 {/* Footer */}
                 <footer className="border-t border-slate-200 dark:border-zinc-800 bg-white/50 dark:bg-zinc-950/50 py-8">
                     <div className="max-w-7xl mx-auto px-6 flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-slate-500 dark:text-zinc-500">
-                        <span>&copy; 2026 Sales Portal. All rights reserved.</span>
+                        <span>&copy; 2026 Metinca Monitoring. All rights reserved.</span>
                         <div className="flex gap-6">
                             <a href="#" className="hover:text-slate-900 dark:hover:text-zinc-50 transition-colors">{t('Kebijakan Privasi', 'Privacy Policy')}</a>
                             <a href="#" className="hover:text-slate-900 dark:hover:text-zinc-50 transition-colors">{t('Syarat Layanan', 'Terms of Service')}</a>
