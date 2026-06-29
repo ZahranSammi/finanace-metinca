@@ -1,6 +1,6 @@
 import * as React from 'react';
 
-type Currency = 'USD' | 'IDR';
+type Currency = 'USD' | 'IDR' | 'EUR';
 
 interface CurrencyContextType {
     currency: Currency;
@@ -10,7 +10,8 @@ interface CurrencyContextType {
 
 const CurrencyContext = React.createContext<CurrencyContextType | undefined>(undefined);
 
-const EXCHANGE_RATE = 16000; // 1 USD = 16,000 IDR
+const EXCHANGE_RATE_IDR = 16000; // 1 USD = 16,000 IDR
+const EXCHANGE_RATE_EUR = 0.92;  // 1 USD = 0.92 EUR
 
 export function CurrencyProvider({ children }: { children: React.ReactNode }) {
     const [currency, setCurrencyState] = React.useState<Currency>(() => {
@@ -33,7 +34,7 @@ export function CurrencyProvider({ children }: { children: React.ReactNode }) {
 
     const formatPrice = (amountInUsd: number) => {
         if (currency === 'IDR') {
-            const idrAmount = amountInUsd * EXCHANGE_RATE;
+            const idrAmount = amountInUsd * EXCHANGE_RATE_IDR;
 
             return new Intl.NumberFormat('id-ID', {
                 style: 'currency',
@@ -41,6 +42,15 @@ export function CurrencyProvider({ children }: { children: React.ReactNode }) {
                 minimumFractionDigits: 0,
                 maximumFractionDigits: 0
             }).format(idrAmount);
+        } else if (currency === 'EUR') {
+            const eurAmount = amountInUsd * EXCHANGE_RATE_EUR;
+
+            return new Intl.NumberFormat('de-DE', {
+                style: 'currency',
+                currency: 'EUR',
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            }).format(eurAmount);
         }
 
         return new Intl.NumberFormat('en-US', {
