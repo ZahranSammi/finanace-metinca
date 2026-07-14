@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 
 interface Customer {
@@ -109,7 +110,7 @@ return;
             <div className="flex flex-1 flex-col gap-6 p-6 max-w-5xl mx-auto">
                 <div className="flex items-center gap-2">
                     <Button variant="ghost" size="icon" asChild>
-                        <Link href="/orders">
+                        <Link href="/orders" aria-label={t('Kembali ke Pesanan', 'Back to Orders')}>
                             <ArrowLeft className="size-5" />
                         </Link>
                     </Button>
@@ -131,24 +132,31 @@ return;
                             <CardContent className="grid gap-4 sm:grid-cols-2">
                                 <div className="space-y-2">
                                     <Label htmlFor="customer">{t('Pelanggan', 'Customer')}</Label>
-                                    <select
-                                        id="customer"
-                                        className="flex h-10 w-full rounded-md border border-neutral-200 bg-white px-3 py-2 text-sm ring-offset-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-950 dark:border-neutral-800 dark:bg-neutral-950 dark:ring-offset-neutral-950 dark:focus-visible:ring-neutral-300"
-                                        value={data.customerId}
-                                        onChange={(e) => setData('customerId', Number(e.target.value))}
+                                    <Select
+                                        value={String(data.customerId)}
+                                        onValueChange={(value) => setData('customerId', Number(value))}
                                     >
-                                        {customers.map((c) => (
-                                            <option key={c.id} value={c.id}>{c.name} ({c.email})</option>
-                                        ))}
-                                    </select>
+                                        <SelectTrigger id="customer" className="w-full">
+                                            <SelectValue placeholder={t('Pilih Pelanggan', 'Select Customer')} />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            {customers.map((c) => (
+                                                <SelectItem key={c.id} value={String(c.id)}>{c.name} ({c.email})</SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
                                 </div>
                                 <div className="space-y-2">
                                     <Label htmlFor="sales-rep">Sales Representative</Label>
                                     <Input
                                         id="sales-rep"
                                         value={data.salesRep}
-                                        onChange={(e) => setData('salesRep', e.target.value)}
+                                        readOnly
+                                        disabled
                                     />
+                                    <p className="text-xs text-muted-foreground">
+                                        {t('Otomatis diisi dari akun Anda.', 'Automatically set from your account.')}
+                                    </p>
                                 </div>
                             </CardContent>
                         </Card>
@@ -163,16 +171,19 @@ return;
                                 <div className="grid gap-4 sm:grid-cols-3">
                                     <div className="sm:col-span-2 space-y-2">
                                         <Label htmlFor="product">{t('Produk', 'Product')}</Label>
-                                        <select
-                                            id="product"
-                                            className="flex h-10 w-full rounded-md border border-neutral-200 bg-white px-3 py-2 text-sm ring-offset-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-950 dark:border-neutral-800 dark:bg-neutral-950 dark:ring-offset-neutral-950 dark:focus-visible:ring-neutral-300"
-                                            value={selectedProductId}
-                                            onChange={(e) => setSelectedProductId(Number(e.target.value))}
+                                        <Select
+                                            value={String(selectedProductId)}
+                                            onValueChange={(value) => setSelectedProductId(Number(value))}
                                         >
-                                            {products.map((p) => (
-                                                <option key={p.id} value={p.id}>{p.name} - {formatPrice(p.price)} ({t('Stok', 'Stock')}: {p.stock})</option>
-                                            ))}
-                                        </select>
+                                            <SelectTrigger id="product" className="w-full">
+                                                <SelectValue placeholder={t('Pilih Produk', 'Select Product')} />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                {products.map((p) => (
+                                                    <SelectItem key={p.id} value={String(p.id)}>{p.name} - {formatPrice(p.price)} ({t('Stok', 'Stock')}: {p.stock})</SelectItem>
+                                                ))}
+                                            </SelectContent>
+                                        </Select>
                                     </div>
                                     <div className="space-y-2">
                                         <Label htmlFor="qty">{t('Jumlah', 'Quantity')}</Label>
@@ -232,6 +243,8 @@ return;
                                                                 variant="ghost"
                                                                 size="icon"
                                                                 className="text-red-500 hover:text-red-700"
+                                                                title={t('Hapus Item', 'Remove Item')}
+                                                                aria-label={t('Hapus Item', 'Remove Item')}
                                                                 onClick={() => handleRemoveItem(index)}
                                                             >
                                                                 <Trash2 className="size-4" />

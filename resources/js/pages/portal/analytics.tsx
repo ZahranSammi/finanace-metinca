@@ -3,10 +3,11 @@ import { Award, Package, Calendar, Download, DollarSign, ShoppingCart, Clock, Ch
 import * as React from 'react';
 import { useCurrency } from '@/components/currency-context';
 import { useLanguage } from '@/components/language-context';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 
 interface RepPerformance {
     name: string;
@@ -66,6 +67,7 @@ export default function Analytics({ rep_performance, product_popularity, chart_d
 
     const maxChartValue = React.useMemo(() => {
         const vals = chart_data.map(d => d.sales);
+
         return vals.length > 0 ? Math.max(...vals, 1000) : 1000;
     }, [chart_data]);
 
@@ -90,21 +92,21 @@ export default function Analytics({ rep_performance, product_popularity, chart_d
                     <CardContent className="pt-6">
                         <form onSubmit={handleFilter} className="flex flex-col gap-4 sm:flex-row sm:items-end">
                             <div className="flex-1 space-y-1">
-                                <label className="text-xs font-semibold text-muted-foreground flex items-center gap-1">
+                                <Label className="text-xs font-semibold text-muted-foreground flex items-center gap-1">
                                     <Calendar className="size-3" /> {t('Tanggal Mulai', 'Start Date')}
-                                </label>
-                                <Input 
-                                    type="date" 
+                                </Label>
+                                <Input
+                                    type="date"
                                     value={startDate}
                                     onChange={(e) => setStartDate(e.target.value)}
                                 />
                             </div>
                             <div className="flex-1 space-y-1">
-                                <label className="text-xs font-semibold text-muted-foreground flex items-center gap-1">
+                                <Label className="text-xs font-semibold text-muted-foreground flex items-center gap-1">
                                     <Calendar className="size-3" /> {t('Tanggal Akhir', 'End Date')}
-                                </label>
-                                <Input 
-                                    type="date" 
+                                </Label>
+                                <Input
+                                    type="date"
                                     value={endDate}
                                     onChange={(e) => setEndDate(e.target.value)}
                                 />
@@ -185,6 +187,7 @@ export default function Analytics({ rep_performance, product_popularity, chart_d
                         ) : (
                             chart_data.map((item, idx) => {
                                 const heightPercent = (item.sales / maxChartValue) * 100;
+
                                 return (
                                     <div key={idx} className="flex flex-col items-center flex-1 h-full justify-end group">
                                         <div className="relative w-full flex justify-center">
@@ -225,8 +228,11 @@ export default function Analytics({ rep_performance, product_popularity, chart_d
                                 <TableBody>
                                     {rep_performance.length === 0 ? (
                                         <TableRow>
-                                            <TableCell colSpan={3} className="text-center h-20 text-muted-foreground">
-                                                {t('Belum ada data penjualan perwakilan.', 'No sales rep performance data.')}
+                                            <TableCell colSpan={3} className="text-center h-28 text-muted-foreground">
+                                                <div className="flex flex-col items-center justify-center gap-2">
+                                                    <Award className="size-7 opacity-30" />
+                                                    {t('Belum ada data penjualan perwakilan.', 'No sales rep performance data.')}
+                                                </div>
                                             </TableCell>
                                         </TableRow>
                                     ) : (
@@ -268,8 +274,11 @@ export default function Analytics({ rep_performance, product_popularity, chart_d
                                 <TableBody>
                                     {product_popularity.length === 0 ? (
                                         <TableRow>
-                                            <TableCell colSpan={3} className="text-center h-20 text-muted-foreground">
-                                                {t('Belum ada produk terjual.', 'No popular product data.')}
+                                            <TableCell colSpan={3} className="text-center h-28 text-muted-foreground">
+                                                <div className="flex flex-col items-center justify-center gap-2">
+                                                    <Package className="size-7 opacity-30" />
+                                                    {t('Belum ada produk terjual.', 'No popular product data.')}
+                                                </div>
                                             </TableCell>
                                         </TableRow>
                                     ) : (

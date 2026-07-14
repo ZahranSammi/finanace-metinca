@@ -1,12 +1,11 @@
 import { Head, useForm } from '@inertiajs/react';
 import * as React from 'react';
+import InputError from '@/components/input-error';
 import { useLanguage } from '@/components/language-context';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import AppLayout from '@/layouts/app-layout';
-import InputError from '@/components/input-error';
 
 interface Customer {
     id: number;
@@ -31,10 +30,7 @@ export default function EditCustomer({ customer }: EditCustomerProps) {
     };
 
     return (
-        <AppLayout breadcrumbs={[
-            { title: t('Pelanggan', 'Customers'), href: '/customers' },
-            { title: t('Ubah', 'Edit'), href: `/customers/${customer.id}/edit` }
-        ]}>
+        <>
             <Head title={t('Ubah Pelanggan', 'Edit Customer')} />
             <div className="flex flex-1 flex-col gap-6 p-6 max-w-2xl mx-auto w-full">
                 <div>
@@ -83,6 +79,13 @@ export default function EditCustomer({ customer }: EditCustomerProps) {
                     </CardContent>
                 </Card>
             </div>
-        </AppLayout>
+        </>
     );
 }
+
+EditCustomer.layout = {
+    breadcrumbs: [
+        { title: 'Customers', href: '/customers' },
+        { title: 'Edit', href: '' },
+    ],
+};

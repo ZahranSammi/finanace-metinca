@@ -1,12 +1,11 @@
 import { Head, useForm } from '@inertiajs/react';
 import * as React from 'react';
+import InputError from '@/components/input-error';
 import { useLanguage } from '@/components/language-context';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import AppLayout from '@/layouts/app-layout';
-import InputError from '@/components/input-error';
 
 export default function CreateCustomer() {
     const { t } = useLanguage();
@@ -21,10 +20,7 @@ export default function CreateCustomer() {
     };
 
     return (
-        <AppLayout breadcrumbs={[
-            { title: t('Pelanggan', 'Customers'), href: '/customers' },
-            { title: t('Tambah', 'Add'), href: '/customers/create' }
-        ]}>
+        <>
             <Head title={t('Tambah Pelanggan', 'Add Customer')} />
             <div className="flex flex-1 flex-col gap-6 p-6 max-w-2xl mx-auto w-full">
                 <div>
@@ -73,6 +69,13 @@ export default function CreateCustomer() {
                     </CardContent>
                 </Card>
             </div>
-        </AppLayout>
+        </>
     );
 }
+
+CreateCustomer.layout = {
+    breadcrumbs: [
+        { title: 'Customers', href: '/customers' },
+        { title: 'Add', href: '/customers/create' },
+    ],
+};

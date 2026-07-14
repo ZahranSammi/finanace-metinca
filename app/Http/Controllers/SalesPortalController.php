@@ -4,80 +4,49 @@ namespace App\Http\Controllers;
 
 use App\Models\Customer;
 use App\Models\Order;
-use App\Models\OrderItem;
 use App\Models\Product;
+use App\Services\OrderService;
+use App\Support\OrderStatus;
+use App\Support\SalesTrend;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
 
 class SalesPortalController extends Controller
 {
+    public function __construct(private readonly OrderService $orders)
+    {
+    }
+
     public function dashboard(Request $request)
     {
+        $user = $request->user();
+
+        // Self-registered users stay "pending" until an administrator promotes
+        // them; they must not see any sales, customer, or pricing data.
+        if (! $user->isSales() && ! $user->isAccounting() && ! $user->isManager()) {
+            return Inertia::render('portal/pending');
+        }
+
         $query = Order::with('customer');
 
-        if ($request->user()->isSales()) {
-            $query->where('sales_rep', $request->user()->name);
+        if ($user->isSales()) {
+            $query->where('user_id', $user->id);
         }
 
         $orders = $query->orderBy('date_raised', 'desc')->get();
-        
-        $totalSales = (double) $orders->where('status', 'Validated')->sum('total_amount');
+
+        $totalSales = (float) $orders->where('status', OrderStatus::VALIDATED)->sum('total_amount');
         $totalOrdersCount = $orders->count();
-        $pendingCount = $orders->where('status', 'Pending')->count();
-        $validatedCount = $orders->where('status', 'Validated')->count();
+        $pendingCount = $orders->where('status', OrderStatus::PENDING)->count();
+        $validatedCount = $orders->where('status', OrderStatus::VALIDATED)->count();
 
-        // Trend calculations from DB
-        $isPostgres = DB::connection()->getDriverName() === 'pgsql';
-        if ($isPostgres) {
-            $monthlyTrendsQuery = Order::select(
-                DB::raw("TO_CHAR(date_raised, 'Mon') as month"),
-                DB::raw("EXTRACT(MONTH FROM date_raised) as month_num"),
-                DB::raw("SUM(total_amount) as sales")
-            )
-            ->where('status', 'Validated');
-            
-            if ($request->user()->isSales()) {
-                $monthlyTrendsQuery->where('sales_rep', $request->user()->name);
-            }
-            
-            $monthlyTrendsQuery->groupBy(DB::raw("TO_CHAR(date_raised, 'Mon'), EXTRACT(MONTH FROM date_raised)"))
-                ->orderBy('month_num');
-        } else {
-            $monthlyTrendsQuery = Order::select(
-                DB::raw("strftime('%m', date_raised) as month_num"),
-                DB::raw("SUM(total_amount) as sales")
-            )
-            ->where('status', 'Validated');
-            
-            if ($request->user()->isSales()) {
-                $monthlyTrendsQuery->where('sales_rep', $request->user()->name);
-            }
-            
-            $monthlyTrendsQuery->groupBy('month_num')
-                ->orderBy('month_num');
-        }
-
-        $monthNames = [
-            '01' => 'Jan', '02' => 'Feb', '03' => 'Mar', '04' => 'Apr',
-            '05' => 'May', '06' => 'Jun', '07' => 'Jul', '08' => 'Aug',
-            '09' => 'Sep', '10' => 'Oct', '11' => 'Nov', '12' => 'Dec'
-        ];
-
-        $chartData = $monthlyTrendsQuery->get()->map(fn($item) => [
-            'month' => $isPostgres ? $item->month : ($monthNames[sprintf('%02d', $item->month_num)] ?? $item->month_num),
-            'sales' => (double) $item->sales,
-        ])->toArray();
+        $chartData = SalesTrend::monthlyValidated(
+            $user->isSales() ? $user->id : null
+        );
 
         if (empty($chartData)) {
-            $chartData = [
-                ['month' => 'Jan', 'sales' => 0],
-                ['month' => 'Feb', 'sales' => 0],
-                ['month' => 'Mar', 'sales' => 0],
-                ['month' => 'Apr', 'sales' => 0],
-                ['month' => 'May', 'sales' => 0],
-                ['month' => 'Jun', 'sales' => 0],
-            ];
+            $chartData = SalesTrend::emptySeries();
         }
 
         return Inertia::render('portal/dashboard', [
@@ -88,7 +57,7 @@ class SalesPortalController extends Controller
                 'validated_orders' => $validatedCount,
             ],
             'chart_data' => $chartData,
-            'recent_orders' => $orders->take(5)->map(fn($o) => [
+            'recent_orders' => $orders->take(5)->map(fn ($o) => [
                 'id' => $o->id,
                 'date_raised' => $o->date_raised->format('M d, Y'),
                 'customer_name' => $o->customer->name,
@@ -104,10 +73,10 @@ class SalesPortalController extends Controller
         $query = Order::with('customer');
 
         if ($request->user()->isSales()) {
-            $query->where('sales_rep', $request->user()->name);
+            $query->where('user_id', $request->user()->id);
         }
 
-        $orders = $query->orderBy('date_raised', 'desc')->get()->map(fn($o) => [
+        $orders = $query->orderBy('date_raised', 'desc')->get()->map(fn ($o) => [
             'id' => $o->id,
             'date_raised' => $o->date_raised->format('M d, Y'),
             'customer_name' => $o->customer->name,
@@ -131,51 +100,30 @@ class SalesPortalController extends Controller
 
     public function storeOrder(Request $request)
     {
-        $request->validate([
+        $data = $request->validate([
             'customerId' => 'required|exists:customers,id',
-            'salesRep' => 'required',
             'items' => 'required|array|min:1',
             'items.*.productId' => 'required|exists:products,id',
             'items.*.quantity' => 'required|integer|min:1',
-            'items.*.price' => 'required|numeric',
         ]);
 
-        return DB::transaction(function () use ($request) {
-            $subtotal = collect($request->items)->sum(fn($item) => $item['price'] * $item['quantity']);
-            $totalAmount = $subtotal * 1.11;
+        $this->orders->create($request->user(), $data);
 
-            $order = Order::create([
-                'id' => 'ORD-' . rand(100, 999) . '-' . chr(rand(65, 90)) . rand(1, 9),
-                'date_raised' => now(),
-                'customer_id' => $request->customerId,
-                'sales_rep' => $request->salesRep,
-                'status' => 'Pending',
-                'total_amount' => round($totalAmount, 2),
-            ]);
-
-            foreach ($request->items as $item) {
-                OrderItem::create([
-                    'order_id' => $order->id,
-                    'product_id' => $item['productId'],
-                    'quantity' => $item['quantity'],
-                    'price' => $item['price'],
-                ]);
-            }
-
-            return redirect()->route('orders.index')->with('success', 'Order created successfully.');
-        });
+        return redirect()->route('orders.index')->with('success', 'Order created successfully.');
     }
 
-    public function submitOrder($id)
+    public function submitOrder(Request $request, $id)
     {
         $order = Order::findOrFail($id);
 
-        if (!in_array($order->status, ['Pending', 'Rejected'])) {
+        Gate::authorize('submit', $order);
+
+        if (! in_array($order->status, OrderStatus::EDITABLE, true)) {
             return redirect()->back()->with('error', 'Only Pending or Rejected orders can be submitted.');
         }
 
         $order->update([
-            'status' => 'Submitted',
+            'status' => OrderStatus::SUBMITTED,
             'submitted_at' => now(),
         ]);
 
@@ -186,16 +134,14 @@ class SalesPortalController extends Controller
     {
         $order = Order::with('items.product', 'customer')->findOrFail($id);
 
-        if (!in_array($order->status, ['Pending', 'Rejected'])) {
-            abort(403, 'Only Pending or Rejected orders can be edited.');
-        }
+        Gate::authorize('update', $order);
 
         return Inertia::render('portal/orders/edit', [
             'order' => [
                 'id' => $order->id,
                 'customerId' => $order->customer_id,
                 'sales_rep' => $order->sales_rep,
-                'items' => $order->items->map(fn($i) => [
+                'items' => $order->items->map(fn ($i) => [
                     'productId' => $i->product_id,
                     'quantity' => $i->quantity,
                     'price' => $i->price,
@@ -210,87 +156,91 @@ class SalesPortalController extends Controller
 
     public function updateOrder(Request $request, $id)
     {
-        $request->validate([
-            'customerId' => 'required|exists:customers,id',
-            'salesRep' => 'required',
-            'items' => 'required|array|min:1',
-        ]);
-
         $order = Order::findOrFail($id);
 
-        if (!in_array($order->status, ['Pending', 'Rejected'])) {
-            abort(403, 'Only Pending or Rejected orders can be updated.');
-        }
+        Gate::authorize('update', $order);
 
-        return DB::transaction(function () use ($request, $order) {
-            $subtotal = collect($request->items)->sum(fn($item) => $item['price'] * $item['quantity']);
-            $totalAmount = $subtotal * 1.11;
+        $data = $request->validate([
+            'customerId' => 'required|exists:customers,id',
+            'items' => 'required|array|min:1',
+            'items.*.productId' => 'required|exists:products,id',
+            'items.*.quantity' => 'required|integer|min:1',
+        ]);
 
-            $order->update([
-                'customer_id' => $request->customerId,
-                'sales_rep' => $request->salesRep,
-                'total_amount' => round($totalAmount, 2),
-            ]);
+        $this->orders->update($order, $request->user(), $data);
 
-            $order->items()->delete();
-
-            foreach ($request->items as $item) {
-                OrderItem::create([
-                    'order_id' => $order->id,
-                    'product_id' => $item['productId'],
-                    'quantity' => $item['quantity'],
-                    'price' => $item['price'],
-                ]);
-            }
-
-            return redirect()->route('orders.index')->with('success', 'Order updated successfully.');
-        });
+        return redirect()->route('orders.index')->with('success', 'Order updated successfully.');
     }
 
     public function destroyOrder($id)
     {
         $order = Order::findOrFail($id);
 
-        if (!in_array($order->status, ['Pending', 'Rejected'])) {
-            abort(403, 'Only Pending or Rejected orders can be deleted.');
-        }
+        Gate::authorize('delete', $order);
 
         $order->delete();
 
         return redirect()->route('orders.index')->with('success', 'Order deleted successfully.');
     }
 
-    public function pipeline()
+    public function pipeline(Request $request)
     {
+        $query = Order::with('customer');
+
+        if ($request->user()->isSales()) {
+            $query->where('user_id', $request->user()->id);
+        }
+
+        $orders = $query->get();
+
+        $buckets = [
+            'prospect' => [],
+            'proposal' => [],
+            'negotiation' => [],
+            'closed_won' => [],
+        ];
+
+        $stageByStatus = [
+            OrderStatus::PENDING => 'prospect',
+            OrderStatus::SUBMITTED => 'proposal',
+            OrderStatus::REJECTED => 'negotiation',
+            OrderStatus::VALIDATED => 'closed_won',
+        ];
+
+        foreach ($orders as $order) {
+            $stage = $stageByStatus[$order->status] ?? null;
+
+            if ($stage === null) {
+                continue;
+            }
+
+            $buckets[$stage][] = [
+                'id' => $order->id,
+                'title' => 'Order '.$order->id,
+                'company' => $order->customer->name ?? 'Unknown Customer',
+                'value' => (float) $order->total_amount,
+                'rep' => $order->sales_rep,
+            ];
+        }
+
         return Inertia::render('portal/pipeline', [
-            'pipeline' => [
-                'prospect' => [
-                    ['id' => 'deal-1', 'title' => 'Cloud Migration Service', 'company' => 'Hooli Inc.', 'value' => 25000, 'rep' => 'J. Smith'],
-                    ['id' => 'deal-2', 'title' => 'Security Audit License', 'company' => 'Initech', 'value' => 8500, 'rep' => 'M. Doe'],
-                ],
-                'proposal' => [
-                    ['id' => 'deal-3', 'title' => 'API Integration Phase 2', 'company' => 'Globex Inc.', 'value' => 12000, 'rep' => 'A. Perez'],
-                ],
-                'negotiation' => [
-                    ['id' => 'deal-4', 'title' => 'Datacenter Server Rack', 'company' => 'Massive Dynamic', 'value' => 45000, 'rep' => 'L. Chen'],
-                ],
-                'closed_won' => [
-                    ['id' => 'deal-5', 'title' => 'Enterprise SLA Upgrade', 'company' => 'Acme Corp', 'value' => 15000, 'rep' => 'J. Smith'],
-                ],
-            ]
+            'pipeline' => $buckets,
         ]);
     }
 
     public function customers()
     {
         return Inertia::render('portal/customers/index', [
-            'customers' => Customer::withCount('orders')->get()->map(fn($c) => [
-                'id' => $c->id,
-                'name' => $c->name,
-                'email' => $c->email,
-                'orders_count' => $c->orders_count,
-                'total_spent' => Order::where('customer_id', $c->id)->sum('total_amount'),
-            ]),
+            'customers' => Customer::withCount('orders')
+                ->withSum('orders as total_spent', 'total_amount')
+                ->get()
+                ->map(fn ($c) => [
+                    'id' => $c->id,
+                    'name' => $c->name,
+                    'email' => $c->email,
+                    'orders_count' => $c->orders_count,
+                    'total_spent' => (float) ($c->total_spent ?? 0),
+                ]),
         ]);
     }
 
@@ -314,18 +264,19 @@ class SalesPortalController extends Controller
     public function editCustomer($id)
     {
         $customer = Customer::findOrFail($id);
+
         return Inertia::render('portal/customers/edit', [
-            'customer' => $customer
+            'customer' => $customer,
         ]);
     }
 
     public function updateCustomer(Request $request, $id)
     {
         $customer = Customer::findOrFail($id);
-        
+
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'email' => 'required|email|unique:customers,email,' . $id,
+            'email' => 'required|email|unique:customers,email,'.$id,
         ]);
 
         $customer->update($validated);
@@ -336,25 +287,15 @@ class SalesPortalController extends Controller
     public function destroyCustomer($id)
     {
         $customer = Customer::findOrFail($id);
+
+        // The customer_id FK cascades: deleting a customer would silently
+        // destroy their orders (including validated ones) and invoices.
+        if ($customer->orders()->exists()) {
+            return redirect()->route('customers.index')->with('error', 'Cannot delete a customer that has orders.');
+        }
+
         $customer->delete();
 
         return redirect()->route('customers.index')->with('success', 'Customer deleted successfully.');
-    }
-
-    public function analytics()
-    {
-        return Inertia::render('portal/analytics', [
-            'rep_performance' => [
-                ['name' => 'J. Smith', 'sales' => 38000, 'deals' => 15],
-                ['name' => 'A. Perez', 'sales' => 24500, 'deals' => 10],
-                ['name' => 'L. Chen', 'sales' => 48200, 'deals' => 8],
-                ['name' => 'M. Doe', 'sales' => 12500, 'deals' => 5],
-            ],
-            'product_popularity' => [
-                ['name' => 'Enterprise Cloud Suite', 'quantity' => 120, 'revenue' => 144000],
-                ['name' => 'SaaS API License', 'quantity' => 450, 'revenue' => 202500],
-                ['name' => 'Database Storage Node', 'quantity' => 18, 'revenue' => 63000],
-            ]
-        ]);
     }
 }

@@ -9,9 +9,13 @@ Route::inertia('/', 'welcome')->name('home');
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('dashboard', [SalesPortalController::class, 'dashboard'])->name('dashboard');
     
-    // View actions (open to all authenticated users)
-    Route::get('orders', [SalesPortalController::class, 'orders'])->name('orders.index');
-    Route::get('customers', [SalesPortalController::class, 'customers'])->name('customers.index');
+    // View actions (staff only — self-registered "pending" users must not
+    // see orders, customers, or pricing data)
+    Route::middleware(['role:staff_sales,staff_accounting,manager'])->group(function () {
+        Route::get('orders', [SalesPortalController::class, 'orders'])->name('orders.index');
+        Route::get('customers', [SalesPortalController::class, 'customers'])->name('customers.index');
+        Route::get('products', [\App\Http\Controllers\ProductController::class, 'index'])->name('products.index');
+    });
 
     // Sales actions (restricted to Sales Reps)
     Route::middleware(['role:staff_sales'])->group(function () {
@@ -29,6 +33,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('customers/{id}/edit', [SalesPortalController::class, 'editCustomer'])->name('customers.edit');
         Route::put('customers/{id}', [SalesPortalController::class, 'updateCustomer'])->name('customers.update');
         Route::delete('customers/{id}', [SalesPortalController::class, 'destroyCustomer'])->name('customers.destroy');
+
+        Route::get('products/create', [\App\Http\Controllers\ProductController::class, 'create'])->name('products.create');
+        Route::post('products', [\App\Http\Controllers\ProductController::class, 'store'])->name('products.store');
+        Route::get('products/{id}/edit', [\App\Http\Controllers\ProductController::class, 'edit'])->name('products.edit');
+        Route::put('products/{id}', [\App\Http\Controllers\ProductController::class, 'update'])->name('products.update');
+        Route::delete('products/{id}', [\App\Http\Controllers\ProductController::class, 'destroy'])->name('products.destroy');
     });
 
     // Accounting actions (restricted to Accounting Staff)

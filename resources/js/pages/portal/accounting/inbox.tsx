@@ -5,19 +5,9 @@ import { useCurrency } from '@/components/currency-context';
 import { useLanguage } from '@/components/language-context';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-
-const Label = (props: React.LabelHTMLAttributes<HTMLLabelElement>) => (
-    <label {...props} className={`text-xs font-semibold text-foreground ${props.className || ''}`} />
-);
-
-const Textarea = (props: React.TextareaHTMLAttributes<HTMLTextAreaElement>) => (
-    <textarea
-        {...props}
-        className={`flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 ${props.className || ''}`}
-    />
-);
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Textarea } from '@/components/ui/textarea';
 
 interface OrderItemDetail {
     product_name: string;
@@ -43,21 +33,19 @@ interface InboxProps {
 export default function Inbox({ orders }: InboxProps) {
     const { formatPrice } = useCurrency();
     const { t } = useLanguage();
-    const { post, processing } = useForm({
+    const { data, setData, post, processing, reset } = useForm({
         notes: '',
     });
 
     const [selectedOrder, setSelectedOrder] = React.useState<OrderItem | null>(null);
     const [isRejecting, setIsRejecting] = React.useState(false);
-    const [notes, setNotes] = React.useState('');
 
     const handleValidate = (orderId: string) => {
         if (confirm(t('Apakah Anda yakin ingin menyetujui pesanan ini?', 'Are you sure you want to validate this order?'))) {
             post(`/accounting/orders/${orderId}/validate`, {
-                data: { notes },
                 onSuccess: () => {
                     setSelectedOrder(null);
-                    setNotes('');
+                    reset('notes');
                 }
             });
         }
@@ -65,17 +53,18 @@ export default function Inbox({ orders }: InboxProps) {
 
     const handleReject = (e: React.FormEvent, orderId: string) => {
         e.preventDefault();
-        if (!notes.trim()) {
+
+        if (!data.notes.trim()) {
             alert(t('Catatan penolakan harus diisi.', 'Rejection notes are required.'));
+
             return;
         }
 
         post(`/accounting/orders/${orderId}/reject`, {
-            data: { notes },
             onSuccess: () => {
                 setSelectedOrder(null);
                 setIsRejecting(false);
-                setNotes('');
+                reset('notes');
             }
         });
     };
@@ -108,8 +97,11 @@ export default function Inbox({ orders }: InboxProps) {
                             <TableBody>
                                 {orders.length === 0 ? (
                                     <TableRow>
-                                        <TableCell colSpan={6} className="h-24 text-center text-muted-foreground">
-                                            {t('Tidak ada pesanan masuk untuk divalidasi.', 'No pending orders in the validation queue.')}
+                                        <TableCell colSpan={6} className="h-32 text-center text-muted-foreground">
+                                            <div className="flex flex-col items-center justify-center gap-2">
+                                                <ClipboardList className="size-8 opacity-30" />
+                                                {t('Tidak ada pesanan masuk untuk divalidasi.', 'No pending orders in the validation queue.')}
+                                            </div>
                                         </TableCell>
                                     </TableRow>
                                 ) : (
@@ -120,7 +112,7 @@ export default function Inbox({ orders }: InboxProps) {
                                             onClick={() => {
                                                 setSelectedOrder(order);
                                                 setIsRejecting(false);
-                                                setNotes('');
+                                                reset('notes');
                                             }}
                                         >
                                             <TableCell className="font-semibold">{order.id}</TableCell>
@@ -136,7 +128,13 @@ export default function Inbox({ orders }: InboxProps) {
                                                 {formatPrice(order.total_amount)}
                                             </TableCell>
                                             <TableCell className="text-center">
-                                                <Button variant="ghost" size="icon" className="size-8 text-neutral-600 hover:text-neutral-900">
+                                                <Button
+                                                    variant="ghost"
+                                                    size="icon"
+                                                    className="size-8 text-neutral-600 hover:text-neutral-900"
+                                                    title={t('Lihat Detail', 'View Details')}
+                                                    aria-label={t('Lihat Detail', 'View Details')}
+                                                >
                                                     <Eye className="size-4" />
                                                 </Button>
                                             </TableCell>
@@ -215,8 +213,8 @@ export default function Inbox({ orders }: InboxProps) {
                                         <form onSubmit={(e) => handleReject(e, selectedOrder.id)} className="space-y-3 pt-2">
                                             <Textarea 
                                                 placeholder={t('Berikan alasan penolakan...', 'Provide rejection reason...')}
-                                                value={notes}
-                                                onChange={(e) => setNotes(e.target.value)}
+                                                value={data.notes}
+                                                onChange={(e) => setData('notes', e.target.value)}
                                                 className="min-h-[80px] text-sm"
                                             />
                                             <div className="flex gap-2">
@@ -234,7 +232,7 @@ export default function Inbox({ orders }: InboxProps) {
                                                     className="flex-1 text-xs"
                                                     onClick={() => {
                                                         setIsRejecting(false);
-                                                        setNotes('');
+                                                        reset('notes');
                                                     }}
                                                     disabled={processing}
                                                 >

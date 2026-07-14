@@ -1,5 +1,6 @@
 import { Link } from '@inertiajs/react';
-import { LayoutGrid, ShoppingCart, BarChart3, GitFork, Package, Users, Globe, Languages, ClipboardList, FileText } from 'lucide-react';
+import { usePage } from '@inertiajs/react';
+import { LayoutGrid, ShoppingCart, BarChart3, GitFork, Package, Users, Globe, Languages, ClipboardList, FileText, Box } from 'lucide-react';
 import * as React from 'react';
 import AppLogo from '@/components/app-logo';
 import { useCurrency } from '@/components/currency-context';
@@ -19,7 +20,6 @@ import {
 import { dashboard } from '@/routes';
 import type { NavItem } from '@/types';
 
-import { usePage } from '@inertiajs/react';
 
 interface RawNavItem {
     titleId: string;
@@ -84,6 +84,13 @@ const mainNavItemsRaw: RawNavItem[] = [
         titleEn: 'Customers',
         href: '/customers',
         icon: Users,
+        roles: ['staff_sales', 'staff_accounting', 'manager'],
+    },
+    {
+        titleId: 'Produk',
+        titleEn: 'Products',
+        href: '/products',
+        icon: Box,
         roles: ['staff_sales', 'staff_accounting', 'manager'],
     },
 ];

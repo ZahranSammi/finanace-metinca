@@ -57,9 +57,10 @@ test('mass order creation scenarios', function (array $payload, bool $isValid) {
         }
 
         $response->assertStatus(302);
+        // sales_rep is now derived from the authenticated user, not the payload.
         $this->assertDatabaseHas('orders', [
             'customer_id' => $customer->id,
-            'sales_rep' => $payload['salesRep']
+            'sales_rep' => $user->name,
         ]);
     } catch (ValidationException $e) {
         if ($isValid) {

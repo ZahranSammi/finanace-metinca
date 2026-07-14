@@ -5,6 +5,7 @@ namespace App\Actions\Fortify;
 use App\Concerns\PasswordValidationRules;
 use App\Concerns\ProfileValidationRules;
 use App\Models\User;
+use App\Support\UserRole;
 use Illuminate\Support\Facades\Validator;
 use Laravel\Fortify\Contracts\CreatesNewUsers;
 
@@ -24,10 +25,14 @@ class CreateNewUser implements CreatesNewUsers
             'password' => $this->passwordRules(),
         ])->validate();
 
-        return User::create([
+        // New users are unprivileged until an administrator promotes them.
+        // Self-registration must never mint a role that can act on data.
+        // forceCreate because 'role' is intentionally not mass assignable.
+        return User::forceCreate([
             'name' => $input['name'],
             'email' => $input['email'],
             'password' => $input['password'],
+            'role' => UserRole::PENDING,
         ]);
     }
 }

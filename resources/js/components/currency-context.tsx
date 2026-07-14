@@ -5,7 +5,9 @@ type Currency = 'USD' | 'IDR' | 'EUR';
 interface CurrencyContextType {
     currency: Currency;
     setCurrency: (currency: Currency) => void;
-    formatPrice: (amountInUsd: number) => string;
+    formatPrice: (amountInIdr: number) => string;
+    convertToBase: (amount: number) => number;
+    convertFromBase: (amount: number) => number;
 }
 
 const CurrencyContext = React.createContext<CurrencyContextType | undefined>(undefined);
@@ -18,10 +20,10 @@ export function CurrencyProvider({ children }: { children: React.ReactNode }) {
         if (typeof window !== 'undefined') {
             const saved = localStorage.getItem('sales_portal_currency');
 
-            return (saved as Currency) || 'USD';
+            return (saved as Currency) || 'IDR';
         }
 
-        return 'USD';
+        return 'IDR';
     });
 
     const setCurrency = (newCurrency: Currency) => {
@@ -32,18 +34,36 @@ export function CurrencyProvider({ children }: { children: React.ReactNode }) {
         }
     };
 
-    const formatPrice = (amountInUsd: number) => {
-        if (currency === 'IDR') {
-            const idrAmount = amountInUsd * EXCHANGE_RATE_IDR;
-
-            return new Intl.NumberFormat('id-ID', {
-                style: 'currency',
-                currency: 'IDR',
-                minimumFractionDigits: 0,
-                maximumFractionDigits: 0
-            }).format(idrAmount);
+    const convertToBase = (amount: number) => {
+        if (currency === 'USD') {
+            return amount * EXCHANGE_RATE_IDR;
         } else if (currency === 'EUR') {
-            const eurAmount = amountInUsd * EXCHANGE_RATE_EUR;
+            return (amount / EXCHANGE_RATE_EUR) * EXCHANGE_RATE_IDR;
+        }
+        return amount;
+    };
+
+    const convertFromBase = (amount: number) => {
+        if (currency === 'USD') {
+            return amount / EXCHANGE_RATE_IDR;
+        } else if (currency === 'EUR') {
+            return (amount / EXCHANGE_RATE_IDR) * EXCHANGE_RATE_EUR;
+        }
+        return amount;
+    };
+
+    const formatPrice = (amountInIdr: number) => {
+        if (currency === 'USD') {
+            const usdAmount = amountInIdr / EXCHANGE_RATE_IDR;
+
+            return new Intl.NumberFormat('en-US', {
+                style: 'currency',
+                currency: 'USD',
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            }).format(usdAmount);
+        } else if (currency === 'EUR') {
+            const eurAmount = (amountInIdr / EXCHANGE_RATE_IDR) * EXCHANGE_RATE_EUR;
 
             return new Intl.NumberFormat('de-DE', {
                 style: 'currency',
@@ -53,16 +73,16 @@ export function CurrencyProvider({ children }: { children: React.ReactNode }) {
             }).format(eurAmount);
         }
 
-        return new Intl.NumberFormat('en-US', {
+        return new Intl.NumberFormat('id-ID', {
             style: 'currency',
-            currency: 'USD',
-            minimumFractionDigits: 2,
-            maximumFractionDigits: 2
-        }).format(amountInUsd);
+            currency: 'IDR',
+            minimumFractionDigits: 0,
+            maximumFractionDigits: 0
+        }).format(amountInIdr);
     };
 
     return (
-        <CurrencyContext.Provider value={{ currency, setCurrency, formatPrice }}>
+        <CurrencyContext.Provider value={{ currency, setCurrency, formatPrice, convertToBase, convertFromBase }}>
             {children}
         </CurrencyContext.Provider>
     );

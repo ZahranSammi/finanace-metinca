@@ -2,7 +2,7 @@
 
 namespace App\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
+use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -11,7 +11,7 @@ use Laravel\Fortify\Contracts\PasskeyUser;
 use Laravel\Fortify\PasskeyAuthenticatable;
 use Laravel\Fortify\TwoFactorAuthenticatable;
 
-class User extends Authenticatable implements PasskeyUser
+class User extends Authenticatable implements MustVerifyEmail, PasskeyUser
 {
     /** @use HasFactory<UserFactory> */
     use HasFactory, Notifiable, PasskeyAuthenticatable, TwoFactorAuthenticatable;
@@ -25,22 +25,24 @@ class User extends Authenticatable implements PasskeyUser
         'name',
         'email',
         'password',
-        'role',
+        // 'role' is deliberately NOT mass assignable: a stray
+        // fill($request->all()) must never let a user grant themselves
+        // a privileged role. Set it explicitly via forceFill()/forceCreate().
     ];
 
     public function isSales(): bool
     {
-        return $this->role === 'staff_sales';
+        return $this->role === \App\Support\UserRole::SALES;
     }
 
     public function isAccounting(): bool
     {
-        return $this->role === 'staff_accounting';
+        return $this->role === \App\Support\UserRole::ACCOUNTING;
     }
 
     public function isManager(): bool
     {
-        return $this->role === 'manager';
+        return $this->role === \App\Support\UserRole::MANAGER;
     }
 
     /**

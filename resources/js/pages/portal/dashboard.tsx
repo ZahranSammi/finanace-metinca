@@ -130,8 +130,15 @@ export default function Dashboard({ metrics, chart_data, recent_orders }: Dashbo
                             <CardDescription>{t('Grafik penjualan bulanan untuk tahun berjalan', 'Monthly sales figures for the current year')}</CardDescription>
                         </CardHeader>
                         <CardContent className="h-[300px] flex items-end justify-between gap-2 pt-4 px-6 pb-2">
-                            {chart_data.map((item, idx) => {
-                                const heightPercent = (item.sales / 6500) * 100;
+                            {chart_data.length === 0 ? (
+                                <div className="w-full h-full flex items-center justify-center text-muted-foreground text-sm">
+                                    Belum ada data tren penjualan.
+                                </div>
+                            ) : (
+                                (() => {
+                                    const maxChartValue = Math.max(...chart_data.map(d => d.sales), 1000);
+                                    return chart_data.map((item, idx) => {
+                                        const heightPercent = (item.sales / maxChartValue) * 100;
 
                                 return (
                                     <div key={idx} className="flex flex-col items-center flex-1 h-full justify-end group">
@@ -148,7 +155,9 @@ export default function Dashboard({ metrics, chart_data, recent_orders }: Dashbo
                                         <span className="text-xs text-muted-foreground mt-2 font-medium">{item.month}</span>
                                     </div>
                                 );
-                            })}
+                                    });
+                                })()
+                            )}
                         </CardContent>
                     </Card>
 

@@ -1,10 +1,9 @@
 import { Head } from '@inertiajs/react';
-import { User, ArrowRight } from 'lucide-react';
+import { User } from 'lucide-react';
 import * as React from 'react';
 import { useCurrency } from '@/components/currency-context';
 import { useLanguage } from '@/components/language-context';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 interface Deal {
@@ -28,10 +27,9 @@ interface PipelineProps {
 
 type StageKey = 'prospect' | 'proposal' | 'negotiation' | 'closed_won';
 
-export default function Pipeline({ pipeline: initialPipeline }: PipelineProps) {
+export default function Pipeline({ pipeline }: PipelineProps) {
     const { formatPrice } = useCurrency();
     const { t } = useLanguage();
-    const [pipeline, setPipeline] = React.useState<PipelineData>(initialPipeline);
 
     const STAGE_LABELS: Record<StageKey, { label: string; color: string }> = React.useMemo(() => ({
         prospect: { label: t('Prospek / Penjajakan', 'Prospect / Discovery'), color: 'border-t-blue-500' },
@@ -39,29 +37,6 @@ export default function Pipeline({ pipeline: initialPipeline }: PipelineProps) {
         negotiation: { label: t('Negosiasi', 'Negotiation'), color: 'border-t-yellow-500' },
         closed_won: { label: t('Kesepakatan Selesai', 'Closed Won'), color: 'border-t-green-500' },
     }), [t]);
-
-    const moveDeal = (dealId: string, currentStage: StageKey, direction: 'left' | 'right') => {
-        const stages: StageKey[] = ['prospect', 'proposal', 'negotiation', 'closed_won'];
-        const currentIdx = stages.indexOf(currentStage);
-        const nextIdx = currentIdx + (direction === 'right' ? 1 : -1);
-
-        if (nextIdx < 0 || nextIdx >= stages.length) {
-return;
-}
-
-        const targetStage = stages[nextIdx];
-        const dealToMove = pipeline[currentStage].find(d => d.id === dealId);
-        
-        if (!dealToMove) {
-return;
-}
-
-        setPipeline(prev => ({
-            ...prev,
-            [currentStage]: prev[currentStage].filter(d => d.id !== dealId),
-            [targetStage]: [...prev[targetStage], dealToMove]
-        }));
-    };
 
     // Calculate pipeline value summaries
     const stageSum = React.useCallback((stage: StageKey) => {
@@ -134,30 +109,6 @@ return;
                                                         <span className="text-sm font-bold text-primary">
                                                             {formatPrice(deal.value)}
                                                         </span>
-                                                    </div>
-                                                    
-                                                    {/* Move Action Controls */}
-                                                    <div className="flex justify-end gap-1 mt-3 pt-2 border-t border-dashed">
-                                                        {stage !== 'prospect' && (
-                                                            <Button 
-                                                                variant="ghost" 
-                                                                size="sm" 
-                                                                className="h-6 px-2 text-[10px]"
-                                                                onClick={() => moveDeal(deal.id, stage, 'left')}
-                                                            >
-                                                                {t('Kembali', 'Back')}
-                                                            </Button>
-                                                        )}
-                                                        {stage !== 'closed_won' && (
-                                                            <Button 
-                                                                variant="ghost" 
-                                                                size="sm" 
-                                                                className="h-6 px-2 text-[10px] text-primary"
-                                                                onClick={() => moveDeal(deal.id, stage, 'right')}
-                                                            >
-                                                                {t('Lanjut', 'Advance')} <ArrowRight className="size-3 ml-1" />
-                                                            </Button>
-                                                        )}
                                                     </div>
                                                 </CardContent>
                                             </Card>

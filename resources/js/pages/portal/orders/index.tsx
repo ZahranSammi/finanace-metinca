@@ -1,5 +1,5 @@
 import { Head, Link, useForm, usePage } from '@inertiajs/react';
-import { Search, Download, Plus, ChevronLeft, ChevronRight, Edit3, Trash2, Send, Printer } from 'lucide-react';
+import { Search, Download, Plus, ChevronLeft, ChevronRight, Edit3, Trash2, Send, Printer, PackageSearch } from 'lucide-react';
 import * as React from 'react';
 import { useCurrency } from '@/components/currency-context';
 import { useLanguage } from '@/components/language-context';
@@ -94,7 +94,10 @@ export default function OrdersIndex({ orders }: OrdersProps) {
 
     const handlePrintInvoice = (order: OrderItem) => {
         const printWindow = window.open('', '_blank');
-        if (!printWindow) return;
+
+        if (!printWindow) {
+return;
+}
 
         printWindow.document.write(`
             <html>
@@ -247,13 +250,17 @@ export default function OrdersIndex({ orders }: OrdersProps) {
                         <TableBody>
                             {filteredOrders.length === 0 ? (
                                 <TableRow>
-                                    <TableCell colSpan={8} className="h-24 text-center text-muted-foreground">
-                                        {t('Tidak ada data pesanan ditemukan.', 'No orders found matching the filter criteria.')}
+                                    <TableCell colSpan={8} className="h-32 text-center text-muted-foreground">
+                                        <div className="flex flex-col items-center justify-center gap-2">
+                                            <PackageSearch className="size-8 opacity-30" />
+                                            {t('Tidak ada data pesanan ditemukan.', 'No orders found matching the filter criteria.')}
+                                        </div>
                                     </TableCell>
                                 </TableRow>
                             ) : (
                                 filteredOrders.map((order) => {
                                     const canModify = isSales && (order.status === 'Pending' || order.status === 'Rejected');
+
                                     return (
                                         <TableRow key={order.id}>
                                             <TableCell>
@@ -307,15 +314,23 @@ export default function OrdersIndex({ orders }: OrdersProps) {
                                                         >
                                                             <Send className="size-4" />
                                                         </Button>
-                                                        <Button variant="ghost" size="icon" asChild className="size-8 text-neutral-600 hover:text-neutral-900 dark:text-zinc-400 dark:hover:text-zinc-100">
-                                                            <Link href={`/orders/${order.id}/edit`}>
+                                                        <Button
+                                                            variant="ghost"
+                                                            size="icon"
+                                                            asChild
+                                                            className="size-8 text-neutral-600 hover:text-neutral-900 dark:text-zinc-400 dark:hover:text-zinc-100"
+                                                            title={t('Ubah Pesanan', 'Edit Order')}
+                                                        >
+                                                            <Link href={`/orders/${order.id}/edit`} aria-label={t('Ubah Pesanan', 'Edit Order')}>
                                                                 <Edit3 className="size-4" />
                                                             </Link>
                                                         </Button>
-                                                        <Button 
-                                                            variant="ghost" 
-                                                            size="icon" 
+                                                        <Button
+                                                            variant="ghost"
+                                                            size="icon"
                                                             className="size-8 text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950/20"
+                                                            title={t('Hapus Pesanan', 'Delete Order')}
+                                                            aria-label={t('Hapus Pesanan', 'Delete Order')}
                                                             onClick={() => handleDeleteOrder(order.id)}
                                                         >
                                                             <Trash2 className="size-4" />
@@ -348,11 +363,11 @@ export default function OrdersIndex({ orders }: OrdersProps) {
                         {t(`Menampilkan 1 sampai ${filteredOrders.length} dari ${orders.length} entri`, `Showing 1 to ${filteredOrders.length} of ${orders.length} entries`)}
                     </span>
                     <div className="flex items-center gap-1">
-                        <Button variant="outline" size="icon" disabled>
+                        <Button variant="outline" size="icon" disabled aria-label={t('Halaman sebelumnya', 'Previous page')}>
                             <ChevronLeft className="size-4" />
                         </Button>
                         <Button variant="default" size="sm" className="px-3">1</Button>
-                        <Button variant="outline" size="icon" disabled>
+                        <Button variant="outline" size="icon" disabled aria-label={t('Halaman berikutnya', 'Next page')}>
                             <ChevronRight className="size-4" />
                         </Button>
                     </div>

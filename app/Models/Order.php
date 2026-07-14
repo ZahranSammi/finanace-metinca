@@ -14,6 +14,7 @@ class Order extends Model
         'date_raised',
         'customer_id',
         'sales_rep',
+        'user_id',
         'status',
         'total_amount',
         'validation_notes',
@@ -25,6 +26,15 @@ class Order extends Model
     public function customer()
     {
         return $this->belongsTo(Customer::class);
+    }
+
+    /**
+     * The sales rep who owns this order. Authorization must use this FK,
+     * never the sales_rep display name (names are mutable and non-unique).
+     */
+    public function user()
+    {
+        return $this->belongsTo(User::class);
     }
 
     public function items()

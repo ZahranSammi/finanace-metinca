@@ -4,11 +4,12 @@ import * as React from 'react';
 import { useCurrency } from '@/components/currency-context';
 import { useLanguage } from '@/components/language-context';
 import { Badge } from '@/components/ui/badge';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
-import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 
 interface RecapItem {
     id: string;
@@ -45,11 +46,15 @@ export default function Rekap({ orders }: RekapProps) {
 
     // Live calculation for the modal
     const calculation = React.useMemo(() => {
-        if (!activeOrder) return { subtotal: 0, tax: 0, total: 0 };
+        if (!activeOrder) {
+return { subtotal: 0, tax: 0, total: 0 };
+}
+
         // Since orders.total_amount is stored as subtotal * 1.11, the base subtotal is:
         const subtotal = Number(activeOrder.total_amount) / 1.11;
         const tax = data.invoice_type === 'tua_lokal' ? subtotal * 0.11 : 0;
         const total = subtotal + tax - (Number(data.dp_amount) || 0);
+
         return { subtotal, tax, total };
     }, [activeOrder, data.invoice_type, data.dp_amount]);
 
@@ -101,8 +106,11 @@ export default function Rekap({ orders }: RekapProps) {
                         <TableBody>
                             {orders.length === 0 ? (
                                 <TableRow>
-                                    <TableCell colSpan={8} className="h-24 text-center text-muted-foreground">
-                                        {t('Belum ada transaksi tervalidasi.', 'No validated transactions logged yet.')}
+                                    <TableCell colSpan={8} className="h-32 text-center text-muted-foreground">
+                                        <div className="flex flex-col items-center justify-center gap-2">
+                                            <Package className="size-8 opacity-30" />
+                                            {t('Belum ada transaksi tervalidasi.', 'No validated transactions logged yet.')}
+                                        </div>
                                     </TableCell>
                                 </TableRow>
                             ) : (
@@ -164,6 +172,7 @@ export default function Rekap({ orders }: RekapProps) {
             {/* Modal Create Invoice */}
             <Dialog open={isOpen} onOpenChange={(open) => {
                 setIsOpen(open);
+
                 if (!open) {
                     reset();
                     setActiveOrder(null);
@@ -182,15 +191,18 @@ export default function Rekap({ orders }: RekapProps) {
                         {/* Tipe Invoice */}
                         <div className="grid gap-2">
                             <Label htmlFor="invoice_type">{t('Jenis Invoice', 'Invoice Type')}</Label>
-                            <select
-                                id="invoice_type"
+                            <Select
                                 value={data.invoice_type}
-                                onChange={(e) => setData('invoice_type', e.target.value as any)}
-                                className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-xs transition-colors focus-visible:outline-hidden focus-visible:ring-1 focus-visible:ring-ring"
+                                onValueChange={(value) => setData('invoice_type', value as any)}
                             >
-                                <option value="tua_lokal">{t('Tua Lokal (Accounting) - PPN 11%', 'Tua Lokal (Accounting) - VAT 11%')}</option>
-                                <option value="inter_expor">{t('Inter Expor (Exim) - Tanpa PPN', 'Inter Expor (Exim) - No VAT')}</option>
-                            </select>
+                                <SelectTrigger id="invoice_type" className="w-full">
+                                    <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="tua_lokal">{t('Tua Lokal (Accounting) - PPN 11%', 'Tua Lokal (Accounting) - VAT 11%')}</SelectItem>
+                                    <SelectItem value="inter_expor">{t('Inter Expor (Exim) - Tanpa PPN', 'Inter Expor (Exim) - No VAT')}</SelectItem>
+                                </SelectContent>
+                            </Select>
                         </div>
 
                         {/* DP (Down Payment) */}

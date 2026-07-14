@@ -2,6 +2,7 @@ import { AppContent } from '@/components/app-content';
 import { AppShell } from '@/components/app-shell';
 import { AppSidebar } from '@/components/app-sidebar';
 import { AppSidebarHeader } from '@/components/app-sidebar-header';
+import { FlashMessages } from '@/components/flash-messages';
 import type { AppLayoutProps } from '@/types';
 
 export default function AppSidebarLayout({
@@ -13,6 +14,7 @@ export default function AppSidebarLayout({
             <AppSidebar />
             <AppContent variant="sidebar" className="overflow-x-hidden">
                 <AppSidebarHeader breadcrumbs={breadcrumbs} />
+                <FlashMessages />
                 {children}
             </AppContent>
         </AppShell>

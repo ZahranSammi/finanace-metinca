@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 
 interface Customer {
@@ -39,7 +40,7 @@ export default function CreateOrder({ customers, products }: CreateOrderProps) {
     const { t } = useLanguage();
     const { auth } = usePage().props as any;
 
-    const { data, setData, post, processing } = useForm({
+    const { data, setData, post, processing, errors } = useForm({
         customerId: customers[0]?.id || 0,
         salesRep: auth?.user?.name || '',
         items: [] as OrderLineItem[],
@@ -94,7 +95,11 @@ return;
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        post('/orders');
+        post('/orders', {
+            onError: () => {
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            },
+        });
     };
 
     return (
@@ -103,7 +108,7 @@ return;
             <div className="flex flex-1 flex-col gap-6 p-6 max-w-5xl mx-auto">
                 <div className="flex items-center gap-2">
                     <Button variant="ghost" size="icon" asChild>
-                        <Link href="/orders">
+                        <Link href="/orders" aria-label={t('Kembali ke Pesanan', 'Back to Orders')}>
                             <ArrowLeft className="size-5" />
                         </Link>
                     </Button>
@@ -112,6 +117,17 @@ return;
                         <p className="text-muted-foreground text-sm">{t('Tambahkan informasi pelanggan dan item produk untuk membuat pesanan baru.', 'Add customer information and product lines to submit a new order.')}</p>
                     </div>
                 </div>
+
+                {Object.keys(errors).length > 0 && (
+                    <div className="rounded-md border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-800 dark:border-red-900 dark:bg-red-950 dark:text-red-300">
+                        <p className="font-semibold">{t('Gagal menyimpan pesanan. Periksa kembali isian berikut:', 'Failed to save order. Please check the following:')}</p>
+                        <ul className="mt-1 list-disc list-inside">
+                            {Object.values(errors).map((message, idx) => (
+                                <li key={idx}>{message}</li>
+                            ))}
+                        </ul>
+                    </div>
+                )}
 
                 <form onSubmit={handleSubmit} className="grid gap-6 md:grid-cols-3">
                     {/* Left 2 Columns: Order Details & Products */}
@@ -125,24 +141,34 @@ return;
                             <CardContent className="grid gap-4 sm:grid-cols-2">
                                 <div className="space-y-2">
                                     <Label htmlFor="customer">{t('Pelanggan', 'Customer')}</Label>
-                                    <select
-                                        id="customer"
-                                        className="flex h-10 w-full rounded-md border border-neutral-200 bg-white px-3 py-2 text-sm ring-offset-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-950 dark:border-neutral-800 dark:bg-neutral-950 dark:ring-offset-neutral-950 dark:focus-visible:ring-neutral-300"
-                                        value={data.customerId}
-                                        onChange={(e) => setData('customerId', Number(e.target.value))}
+                                    <Select
+                                        value={String(data.customerId)}
+                                        onValueChange={(value) => setData('customerId', Number(value))}
                                     >
-                                        {customers.map((c) => (
-                                            <option key={c.id} value={c.id}>{c.name} ({c.email})</option>
-                                        ))}
-                                    </select>
+                                        <SelectTrigger id="customer" className="w-full">
+                                            <SelectValue placeholder={t('Pilih Pelanggan', 'Select Customer')} />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            {customers.map((c) => (
+                                                <SelectItem key={c.id} value={String(c.id)}>{c.name} ({c.email})</SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                    {errors.customerId && (
+                                        <p className="text-sm text-red-600">{errors.customerId}</p>
+                                    )}
                                 </div>
                                 <div className="space-y-2">
                                     <Label htmlFor="sales-rep">Sales Representative</Label>
                                     <Input
                                         id="sales-rep"
-                                        value={data.salesRep}
-                                        onChange={(e) => setData('salesRep', e.target.value)}
+                                        value={auth?.user?.name || ''}
+                                        readOnly
+                                        disabled
                                     />
+                                    <p className="text-xs text-muted-foreground">
+                                        {t('Otomatis diisi dari akun Anda.', 'Automatically set from your account.')}
+                                    </p>
                                 </div>
                             </CardContent>
                         </Card>
@@ -157,16 +183,19 @@ return;
                                 <div className="grid gap-4 sm:grid-cols-3">
                                     <div className="sm:col-span-2 space-y-2">
                                         <Label htmlFor="product">{t('Produk', 'Product')}</Label>
-                                        <select
-                                            id="product"
-                                            className="flex h-10 w-full rounded-md border border-neutral-200 bg-white px-3 py-2 text-sm ring-offset-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-950 dark:border-neutral-800 dark:bg-neutral-950 dark:ring-offset-neutral-950 dark:focus-visible:ring-neutral-300"
-                                            value={selectedProductId}
-                                            onChange={(e) => setSelectedProductId(Number(e.target.value))}
+                                        <Select
+                                            value={String(selectedProductId)}
+                                            onValueChange={(value) => setSelectedProductId(Number(value))}
                                         >
-                                            {products.map((p) => (
-                                                <option key={p.id} value={p.id}>{p.name} - {formatPrice(p.price)} ({t('Stok', 'Stock')}: {p.stock})</option>
-                                            ))}
-                                        </select>
+                                            <SelectTrigger id="product" className="w-full">
+                                                <SelectValue placeholder={t('Pilih Produk', 'Select Product')} />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                {products.map((p) => (
+                                                    <SelectItem key={p.id} value={String(p.id)}>{p.name} - {formatPrice(p.price)} ({t('Stok', 'Stock')}: {p.stock})</SelectItem>
+                                                ))}
+                                            </SelectContent>
+                                        </Select>
                                     </div>
                                     <div className="space-y-2">
                                         <Label htmlFor="qty">{t('Jumlah', 'Quantity')}</Label>
@@ -182,6 +211,9 @@ return;
                                 <Button type="button" onClick={handleAddItem} variant="secondary" className="w-full flex items-center justify-center gap-1">
                                     <Plus className="size-4" /> {t('Tambah Baris Item', 'Add Item Line')}
                                 </Button>
+                                {errors.items && (
+                                    <p className="text-sm text-red-600">{errors.items}</p>
+                                )}
                             </CardContent>
                         </Card>
 
@@ -226,6 +258,8 @@ return;
                                                                 variant="ghost"
                                                                 size="icon"
                                                                 className="text-red-500 hover:text-red-700"
+                                                                title={t('Hapus Item', 'Remove Item')}
+                                                                aria-label={t('Hapus Item', 'Remove Item')}
                                                                 onClick={() => handleRemoveItem(index)}
                                                             >
                                                                 <Trash2 className="size-4" />

@@ -31,9 +31,9 @@ export default function Login({ status, canResetPassword }: Props) {
             >
                 {({ processing, errors }) => (
                     <>
-                        <div className="grid gap-6">
+                        <div className="grid gap-5">
                             <div className="grid gap-2">
-                                <Label htmlFor="email">Email address</Label>
+                                <Label htmlFor="email" className="font-semibold text-foreground/80">Email address</Label>
                                 <Input
                                     id="email"
                                     type="email"
@@ -43,13 +43,14 @@ export default function Login({ status, canResetPassword }: Props) {
                                     tabIndex={1}
                                     autoComplete="email"
                                     placeholder="email@example.com"
+                                    className="h-11 rounded-lg bg-background/50 backdrop-blur-sm transition-colors hover:bg-background focus:bg-background focus-visible:ring-primary/50"
                                 />
                                 <InputError message={errors.email} />
                             </div>
 
                             <div className="grid gap-2">
                                 <div className="flex items-center">
-                                    <Label htmlFor="password">Password</Label>
+                                    <Label htmlFor="password" className="font-semibold text-foreground/80">Password</Label>
                                     {canResetPassword && (
                                         <TextLink
                                             href={request()}
@@ -67,6 +68,7 @@ export default function Login({ status, canResetPassword }: Props) {
                                     tabIndex={2}
                                     autoComplete="current-password"
                                     placeholder="Password"
+                                    className="h-11 rounded-lg bg-background/50 backdrop-blur-sm transition-colors hover:bg-background focus:bg-background focus-visible:ring-primary/50"
                                 />
                                 <InputError message={errors.password} />
                             </div>
@@ -76,13 +78,14 @@ export default function Login({ status, canResetPassword }: Props) {
                                     id="remember"
                                     name="remember"
                                     tabIndex={3}
+                                    className="data-[state=checked]:bg-primary"
                                 />
-                                <Label htmlFor="remember">Remember me</Label>
+                                <Label htmlFor="remember" className="font-medium text-foreground/80">Remember me</Label>
                             </div>
 
                             <Button
                                 type="submit"
-                                className="mt-4 w-full"
+                                className="mt-2 h-11 w-full rounded-lg bg-gradient-to-r from-primary to-primary/80 text-base font-semibold text-primary-foreground shadow-lg shadow-primary/30 transition-all hover:scale-[1.02] hover:shadow-primary/40 active:scale-95"
                                 tabIndex={4}
                                 disabled={processing}
                                 data-test="login-button"
@@ -92,9 +95,9 @@ export default function Login({ status, canResetPassword }: Props) {
                             </Button>
                         </div>
 
-                        <div className="text-center text-sm text-muted-foreground">
+                        <div className="text-center text-sm font-medium text-muted-foreground">
                             Don't have an account?{' '}
-                            <TextLink href={register()} tabIndex={5}>
+                            <TextLink href={register()} tabIndex={5} className="font-bold text-primary hover:underline">
                                 Sign up
                             </TextLink>
                         </div>

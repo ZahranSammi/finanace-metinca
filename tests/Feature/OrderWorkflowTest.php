@@ -13,6 +13,7 @@ test('sales rep can submit pending order to accounting', function () {
         'date_raised' => now(),
         'customer_id' => $customer->id,
         'sales_rep' => 'Sales Representative',
+        'user_id' => $sales->id,
         'status' => 'Pending',
         'total_amount' => 150.00,
     ]);
@@ -37,6 +38,7 @@ test('sales rep cannot edit or delete a submitted order', function () {
         'date_raised' => now(),
         'customer_id' => $customer->id,
         'sales_rep' => 'Sales Representative',
+        'user_id' => $sales->id,
         'status' => 'Submitted',
         'total_amount' => 150.00,
     ]);

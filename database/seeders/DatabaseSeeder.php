@@ -15,36 +15,9 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // Default Test User (Sales)
-        User::factory()->create([
-            'name' => 'Test User',
-            'email' => 'test@example.com',
-            'role' => 'staff_sales',
-        ]);
-
-        // Staff Sales User
-        User::factory()->create([
-            'name' => 'Staff Sales',
-            'email' => 'sales@example.com',
-            'role' => 'staff_sales',
-        ]);
-
-        // Staff Accounting User
-        User::factory()->create([
-            'name' => 'Staff Accounting',
-            'email' => 'accounting@example.com',
-            'role' => 'staff_accounting',
-        ]);
-
-        // Manager User
-        User::factory()->create([
-            'name' => 'Manager User',
-            'email' => 'manager@example.com',
-            'role' => 'manager',
-        ]);
-
         $this->call([
-            SalesPortalSeeder::class,
+            UserSeeder::class,
+            MasterDataSeeder::class,
         ]);
     }
 }

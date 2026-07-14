@@ -1,13 +1,12 @@
 import { Head, Link, router } from '@inertiajs/react';
-import { Search, Mail, ShoppingBag, Plus, MoreHorizontal, Edit, Trash2 } from 'lucide-react';
+import { Search, Mail, ShoppingBag, Plus, MoreHorizontal, Edit, Trash2, Users } from 'lucide-react';
 import * as React from 'react';
 import { useCurrency } from '@/components/currency-context';
 import { useLanguage } from '@/components/language-context';
-import { Input } from '@/components/ui/input';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import AppLayout from '@/layouts/app-layout';
+import { Input } from '@/components/ui/input';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 
 interface Customer {
     id: number;
@@ -40,7 +39,7 @@ export default function Customers({ customers }: CustomersProps) {
     };
 
     return (
-        <AppLayout breadcrumbs={[{ title: t('Pelanggan', 'Customers'), href: '/customers' }]}>
+        <>
             <Head title={t('Daftar Pelanggan', 'Customers')} />
             <div className="flex flex-1 flex-col gap-6 p-6">
                 <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -84,8 +83,11 @@ export default function Customers({ customers }: CustomersProps) {
                         <TableBody>
                             {filteredCustomers.length === 0 ? (
                                 <TableRow>
-                                    <TableCell colSpan={5} className="h-24 text-center text-muted-foreground">
-                                        {t('Tidak ada data pelanggan ditemukan.', 'No customers found.')}
+                                    <TableCell colSpan={5} className="h-32 text-center text-muted-foreground">
+                                        <div className="flex flex-col items-center justify-center gap-2">
+                                            <Users className="size-8 opacity-30" />
+                                            {t('Tidak ada data pelanggan ditemukan.', 'No customers found.')}
+                                        </div>
                                     </TableCell>
                                 </TableRow>
                             ) : (
@@ -108,7 +110,7 @@ export default function Customers({ customers }: CustomersProps) {
                                         <TableCell>
                                             <DropdownMenu>
                                                 <DropdownMenuTrigger asChild>
-                                                    <Button variant="ghost" className="size-8 p-0">
+                                                    <Button variant="ghost" className="size-8 p-0" aria-label={t('Buka menu aksi', 'Open actions menu')}>
                                                         <MoreHorizontal className="size-4" />
                                                     </Button>
                                                 </DropdownMenuTrigger>
@@ -134,6 +136,10 @@ export default function Customers({ customers }: CustomersProps) {
                     </Table>
                 </div>
             </div>
-        </AppLayout>
+        </>
     );
 }
+
+Customers.layout = {
+    breadcrumbs: [{ title: 'Customers', href: '/customers' }],
+};

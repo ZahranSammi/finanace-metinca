@@ -1,12 +1,12 @@
 import { createInertiaApp } from '@inertiajs/react';
+import { CurrencyProvider } from '@/components/currency-context';
+import { LanguageProvider } from '@/components/language-context';
 import { Toaster } from '@/components/ui/sonner';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { initializeTheme } from '@/hooks/use-appearance';
 import AppLayout from '@/layouts/app-layout';
 import AuthLayout from '@/layouts/auth-layout';
 import SettingsLayout from '@/layouts/settings/layout';
-import { LanguageProvider } from '@/components/language-context';
-import { CurrencyProvider } from '@/components/currency-context';
 
 const appName = import.meta.env.VITE_APP_NAME || 'Laravel';
 

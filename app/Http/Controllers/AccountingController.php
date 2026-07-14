@@ -3,18 +3,20 @@
 namespace App\Http\Controllers;
 
 use App\Models\Order;
+use App\Support\OrderStatus;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
 
 class AccountingController extends Controller
 {
     public function inbox()
     {
-        $orders = Order::with('customer')
-            ->where('status', 'Submitted')
+        $orders = Order::with(['customer', 'items.product'])
+            ->where('status', OrderStatus::SUBMITTED)
             ->orderBy('submitted_at', 'asc')
             ->get()
-            ->map(fn($o) => [
+            ->map(fn ($o) => [
                 'id' => $o->id,
                 'date_raised' => $o->date_raised->format('M d, Y'),
                 'submitted_at' => $o->submitted_at ? $o->submitted_at->format('M d, Y H:i') : null,
@@ -22,7 +24,7 @@ class AccountingController extends Controller
                 'sales_rep' => $o->sales_rep,
                 'status' => $o->status,
                 'total_amount' => $o->total_amount,
-                'items' => $o->items()->with('product')->get()->map(fn($item) => [
+                'items' => $o->items->map(fn ($item) => [
                     'product_name' => $item->product->name,
                     'quantity' => $item->quantity,
                     'price' => $item->price,
@@ -36,13 +38,17 @@ class AccountingController extends Controller
 
     public function validateOrder(Request $request, $id)
     {
-        $order = Order::where('status', 'Submitted')->findOrFail($id);
+        $validated = $request->validate([
+            'notes' => 'nullable|string|max:1000',
+        ]);
+
+        $order = Order::where('status', OrderStatus::SUBMITTED)->findOrFail($id);
 
         $order->update([
-            'status' => 'Validated',
+            'status' => OrderStatus::VALIDATED,
             'validated_at' => now(),
-            'validated_by' => auth()->id(),
-            'validation_notes' => $request->input('notes'),
+            'validated_by' => Auth::id(),
+            'validation_notes' => $validated['notes'] ?? null,
         ]);
 
         return redirect()->route('accounting.inbox')->with('success', 'Order validated successfully.');
@@ -50,15 +56,15 @@ class AccountingController extends Controller
 
     public function rejectOrder(Request $request, $id)
     {
-        $request->validate([
+        $validated = $request->validate([
             'notes' => 'required|string|max:1000',
         ]);
 
-        $order = Order::where('status', 'Submitted')->findOrFail($id);
+        $order = Order::where('status', OrderStatus::SUBMITTED)->findOrFail($id);
 
         $order->update([
-            'status' => 'Rejected',
-            'validation_notes' => $request->input('notes'),
+            'status' => OrderStatus::REJECTED,
+            'validation_notes' => $validated['notes'],
             'submitted_at' => null, // reset submission
         ]);
 
@@ -68,10 +74,10 @@ class AccountingController extends Controller
     public function rekap()
     {
         $orders = Order::with('customer', 'validatedBy', 'invoice')
-            ->where('status', 'Validated')
+            ->where('status', OrderStatus::VALIDATED)
             ->orderBy('validated_at', 'desc')
             ->get()
-            ->map(fn($o) => [
+            ->map(fn ($o) => [
                 'id' => $o->id,
                 'date_raised' => $o->date_raised->format('M d, Y'),
                 'validated_at' => $o->validated_at ? $o->validated_at->format('M d, Y H:i') : null,
@@ -80,7 +86,7 @@ class AccountingController extends Controller
                 'sales_rep' => $o->sales_rep,
                 'total_amount' => $o->total_amount,
                 'has_invoice' => $o->invoice !== null,
-                'invoice_id' => $o->invoice ? 'INV-' . str_pad($o->invoice->id, 5, '0', STR_PAD_LEFT) : null,
+                'invoice_id' => $o->invoice ? 'INV-'.str_pad($o->invoice->id, 5, '0', STR_PAD_LEFT) : null,
             ]);
 
         return Inertia::render('portal/accounting/rekap', [

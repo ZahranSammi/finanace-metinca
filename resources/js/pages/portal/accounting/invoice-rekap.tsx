@@ -35,6 +35,7 @@ export default function InvoiceRekap({ invoices }: InvoiceRekapProps) {
 
         invoices.forEach(inv => {
             totalRevenue += Number(inv.total_amount);
+
             if (inv.invoice_type === 'tua_lokal') {
                 localCount++;
             } else {
@@ -106,8 +107,11 @@ export default function InvoiceRekap({ invoices }: InvoiceRekapProps) {
                         <TableBody>
                             {invoices.length === 0 ? (
                                 <TableRow>
-                                    <TableCell colSpan={10} className="h-24 text-center text-muted-foreground">
-                                        {t('Belum ada invoice yang diterbitkan.', 'No invoices have been issued yet.')}
+                                    <TableCell colSpan={10} className="h-32 text-center text-muted-foreground">
+                                        <div className="flex flex-col items-center justify-center gap-2">
+                                            <FileText className="size-8 opacity-30" />
+                                            {t('Belum ada invoice yang diterbitkan.', 'No invoices have been issued yet.')}
+                                        </div>
                                     </TableCell>
                                 </TableRow>
                             ) : (

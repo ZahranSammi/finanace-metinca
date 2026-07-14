@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\Invoice;
 use App\Models\Order;
+use App\Support\OrderStatus;
+use App\Support\Tax;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -43,6 +45,11 @@ class InvoiceController extends Controller
 
         $order = Order::with('items')->findOrFail($request->order_id);
 
+        // Invoices may only be issued once accounting has validated the order.
+        if ($order->status !== OrderStatus::VALIDATED) {
+            return redirect()->back()->with('error', 'Invoices can only be created for validated orders.');
+        }
+
         // Check if invoice already exists
         if (Invoice::where('order_id', $order->id)->exists()) {
             return redirect()->back()->with('error', 'Invoice already exists for this order.');
@@ -50,14 +57,19 @@ class InvoiceController extends Controller
 
         // Calculate subtotal from order items
         $subtotal = $order->items->sum(fn($item) => $item->price * $item->quantity);
-        $dpAmount = $request->input('dp_amount', 0) ?? 0;
+        $dpAmount = (float) ($request->input('dp_amount', 0) ?? 0);
 
         $taxPercent = 0;
         $taxAmount = 0;
 
         if ($request->invoice_type === 'tua_lokal') {
-            $taxPercent = 11;
-            $taxAmount = $subtotal * 0.11;
+            $taxPercent = Tax::PERCENT;
+            $taxAmount = Tax::on($subtotal);
+        }
+
+        // The down payment can never exceed what is owed.
+        if ($dpAmount > $subtotal + $taxAmount) {
+            return redirect()->back()->with('error', 'Down payment cannot exceed the invoice total.');
         }
 
         $totalAmount = $subtotal + $taxAmount - $dpAmount;
