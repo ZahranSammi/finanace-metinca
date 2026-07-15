@@ -24,7 +24,7 @@ class SalesPortalSeeder extends Seeder
 
         $customerModels = [];
         foreach ($customers as $c) {
-            $customerModels[] = Customer::create($c);
+            $customerModels[] = Customer::firstOrCreate(['email' => $c['email']], $c);
         }
 
         $products = [
@@ -36,7 +36,7 @@ class SalesPortalSeeder extends Seeder
 
         $productModels = [];
         foreach ($products as $p) {
-            $productModels[] = Product::create($p);
+            $productModels[] = Product::firstOrCreate(['code' => $p['code']], $p);
         }
 
         // We want data spread across the last few months of 2026:
@@ -159,6 +159,9 @@ class SalesPortalSeeder extends Seeder
         ];
 
         foreach ($ordersData as $oData) {
+            if (Order::where('id', $oData['id'])->exists()) {
+                continue;
+            }
             $subtotal = 0;
             foreach ($oData['items'] as $item) {
                 $p = $productModels[$item['product_idx']];

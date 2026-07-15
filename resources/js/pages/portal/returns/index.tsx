@@ -1,4 +1,4 @@
-import { Head, Link } from '@inertiajs/react';
+import { Head, Link, usePage } from '@inertiajs/react';
 import { Undo2, Plus } from 'lucide-react';
 import * as React from 'react';
 import { useCurrency } from '@/components/currency-context';
@@ -24,6 +24,8 @@ interface ReturnIndexProps {
 export default function ReturnsIndex({ returns }: ReturnIndexProps) {
     const { formatPrice } = useCurrency();
     const { t } = useLanguage();
+    const { auth } = usePage().props as any;
+    const isSales = auth?.user?.role === 'staff_sales';
 
     return (
         <>
@@ -36,13 +38,15 @@ export default function ReturnsIndex({ returns }: ReturnIndexProps) {
                             {t('Kelola pengembalian barang (Kredit Internal & Debit Eksternal).', 'Manage item returns (Internal Credit & External Debit).')}
                         </p>
                     </div>
-                    <div className="flex gap-4">
-                        <Button asChild>
-                            <Link href="/returns/create" className="flex items-center gap-2">
-                                <Plus className="size-4" /> {t('Buat Retur', 'Create Return')}
-                            </Link>
-                        </Button>
-                    </div>
+                    {isSales && (
+                        <div className="flex gap-4">
+                            <Button asChild>
+                                <Link href="/returns/create" className="flex items-center gap-2">
+                                    <Plus className="size-4" /> {t('Buat Retur', 'Create Return')}
+                                </Link>
+                            </Button>
+                        </div>
+                    )}
                 </div>
 
                 <div className="rounded-md border border-sidebar-border/70 bg-card">

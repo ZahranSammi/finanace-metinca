@@ -1,4 +1,4 @@
-import { Head, Link, router } from '@inertiajs/react';
+import { Head, Link, router, usePage } from '@inertiajs/react';
 import { Search, Mail, ShoppingBag, Plus, MoreHorizontal, Edit, Trash2, Users } from 'lucide-react';
 import * as React from 'react';
 import { useCurrency } from '@/components/currency-context';
@@ -23,6 +23,8 @@ interface CustomersProps {
 export default function Customers({ customers }: CustomersProps) {
     const { formatPrice } = useCurrency();
     const { t } = useLanguage();
+    const { auth } = usePage().props as any;
+    const isSales = auth?.user?.role === 'staff_sales';
     const [searchQuery, setSearchQuery] = React.useState('');
 
     const filteredCustomers = React.useMemo(() => {
@@ -47,11 +49,13 @@ export default function Customers({ customers }: CustomersProps) {
                         <h1 className="text-3xl font-bold tracking-tight">{t('Direktori Pelanggan', 'Customer Directory')}</h1>
                         <p className="text-muted-foreground text-sm">{t('Kelola data pelanggan dan lihat riwayat transaksi mereka.', 'Manage customer data and view their transaction history.')}</p>
                     </div>
-                    <Link href="/customers/create">
-                        <Button className="gap-2">
-                            <Plus className="size-4" /> {t('Tambah Pelanggan', 'Add Customer')}
-                        </Button>
-                    </Link>
+                    {isSales && (
+                        <Link href="/customers/create">
+                            <Button className="gap-2">
+                                <Plus className="size-4" /> {t('Tambah Pelanggan', 'Add Customer')}
+                            </Button>
+                        </Link>
+                    )}
                 </div>
 
                 {/* Search Customer */}
@@ -77,13 +81,13 @@ export default function Customers({ customers }: CustomersProps) {
                                 <TableHead>{t('Kontak Email', 'Email Contact')}</TableHead>
                                 <TableHead className="text-right">{t('Jumlah Pesanan', 'Orders Count')}</TableHead>
                                 <TableHead className="text-right">{t('Total Nilai Pelanggan', 'Total Customer Value')}</TableHead>
-                                <TableHead className="w-[80px]"></TableHead>
+                                {isSales && <TableHead className="w-[80px]"></TableHead>}
                             </TableRow>
                         </TableHeader>
                         <TableBody>
                             {filteredCustomers.length === 0 ? (
                                 <TableRow>
-                                    <TableCell colSpan={5} className="h-32 text-center text-muted-foreground">
+                                    <TableCell colSpan={isSales ? 5 : 4} className="h-32 text-center text-muted-foreground">
                                         <div className="flex flex-col items-center justify-center gap-2">
                                             <Users className="size-8 opacity-30" />
                                             {t('Tidak ada data pelanggan ditemukan.', 'No customers found.')}
@@ -107,28 +111,30 @@ export default function Customers({ customers }: CustomersProps) {
                                         <TableCell className="text-right font-bold text-green-600 dark:text-green-400">
                                             {formatPrice(c.total_spent)}
                                         </TableCell>
-                                        <TableCell>
-                                            <DropdownMenu>
-                                                <DropdownMenuTrigger asChild>
-                                                    <Button variant="ghost" className="size-8 p-0" aria-label={t('Buka menu aksi', 'Open actions menu')}>
-                                                        <MoreHorizontal className="size-4" />
-                                                    </Button>
-                                                </DropdownMenuTrigger>
-                                                <DropdownMenuContent align="end">
-                                                    <Link href={`/customers/${c.id}/edit`}>
-                                                        <DropdownMenuItem className="gap-2 cursor-pointer">
-                                                            <Edit className="size-4" /> {t('Ubah', 'Edit')}
+                                        {isSales && (
+                                            <TableCell>
+                                                <DropdownMenu>
+                                                    <DropdownMenuTrigger asChild>
+                                                        <Button variant="ghost" className="size-8 p-0" aria-label={t('Buka menu aksi', 'Open actions menu')}>
+                                                            <MoreHorizontal className="size-4" />
+                                                        </Button>
+                                                    </DropdownMenuTrigger>
+                                                    <DropdownMenuContent align="end">
+                                                        <Link href={`/customers/${c.id}/edit`}>
+                                                            <DropdownMenuItem className="gap-2 cursor-pointer">
+                                                                <Edit className="size-4" /> {t('Ubah', 'Edit')}
+                                                            </DropdownMenuItem>
+                                                        </Link>
+                                                        <DropdownMenuItem 
+                                                            className="gap-2 text-destructive cursor-pointer"
+                                                            onClick={() => handleDelete(c.id)}
+                                                        >
+                                                            <Trash2 className="size-4" /> {t('Hapus', 'Delete')}
                                                         </DropdownMenuItem>
-                                                    </Link>
-                                                    <DropdownMenuItem 
-                                                        className="gap-2 text-destructive cursor-pointer"
-                                                        onClick={() => handleDelete(c.id)}
-                                                    >
-                                                        <Trash2 className="size-4" /> {t('Hapus', 'Delete')}
-                                                    </DropdownMenuItem>
-                                                </DropdownMenuContent>
-                                            </DropdownMenu>
-                                        </TableCell>
+                                                    </DropdownMenuContent>
+                                                </DropdownMenu>
+                                            </TableCell>
+                                        )}
                                     </TableRow>
                                 ))
                             )}

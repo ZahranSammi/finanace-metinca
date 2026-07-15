@@ -15,6 +15,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('orders', [SalesPortalController::class, 'orders'])->name('orders.index');
         Route::get('customers', [SalesPortalController::class, 'customers'])->name('customers.index');
         Route::get('products', [\App\Http\Controllers\ProductController::class, 'index'])->name('products.index');
+        Route::get('returns', [\App\Http\Controllers\ReturnController::class, 'index'])->name('returns.index');
     });
 
     // Sales actions (restricted to Sales Reps)
@@ -41,7 +42,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::delete('products/{id}', [\App\Http\Controllers\ProductController::class, 'destroy'])->name('products.destroy');
 
         // Returns (Barang Reject)
-        Route::get('returns', [\App\Http\Controllers\ReturnController::class, 'index'])->name('returns.index');
         Route::get('returns/create', [\App\Http\Controllers\ReturnController::class, 'create'])->name('returns.create');
         Route::post('returns', [\App\Http\Controllers\ReturnController::class, 'store'])->name('returns.store');
     });
