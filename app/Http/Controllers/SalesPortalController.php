@@ -102,6 +102,8 @@ class SalesPortalController extends Controller
     {
         $data = $request->validate([
             'customerId' => 'required|exists:customers,id',
+            'currency' => 'nullable|string|in:IDR,EUR,USD',
+            'exchangeRate' => 'nullable|numeric|min:0',
             'items' => 'required|array|min:1',
             'items.*.productId' => 'required|exists:products,id',
             'items.*.quantity' => 'required|integer|min:1',
@@ -141,6 +143,8 @@ class SalesPortalController extends Controller
                 'id' => $order->id,
                 'customerId' => $order->customer_id,
                 'sales_rep' => $order->sales_rep,
+                'currency' => $order->currency,
+                'exchangeRate' => $order->exchange_rate,
                 'items' => $order->items->map(fn ($i) => [
                     'productId' => $i->product_id,
                     'quantity' => $i->quantity,
@@ -162,6 +166,8 @@ class SalesPortalController extends Controller
 
         $data = $request->validate([
             'customerId' => 'required|exists:customers,id',
+            'currency' => 'nullable|string|in:IDR,EUR,USD',
+            'exchangeRate' => 'nullable|numeric|min:0',
             'items' => 'required|array|min:1',
             'items.*.productId' => 'required|exists:products,id',
             'items.*.quantity' => 'required|integer|min:1',

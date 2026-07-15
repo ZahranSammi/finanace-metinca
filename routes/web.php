@@ -39,6 +39,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('products/{id}/edit', [\App\Http\Controllers\ProductController::class, 'edit'])->name('products.edit');
         Route::put('products/{id}', [\App\Http\Controllers\ProductController::class, 'update'])->name('products.update');
         Route::delete('products/{id}', [\App\Http\Controllers\ProductController::class, 'destroy'])->name('products.destroy');
+
+        // Returns (Barang Reject)
+        Route::get('returns', [\App\Http\Controllers\ReturnController::class, 'index'])->name('returns.index');
+        Route::get('returns/create', [\App\Http\Controllers\ReturnController::class, 'create'])->name('returns.create');
+        Route::post('returns', [\App\Http\Controllers\ReturnController::class, 'store'])->name('returns.store');
     });
 
     // Accounting actions (restricted to Accounting Staff)
@@ -50,6 +55,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
         
         Route::get('accounting/invoice-rekap', [InvoiceController::class, 'index'])->name('accounting.invoice_rekap');
         Route::post('accounting/invoices', [InvoiceController::class, 'store'])->name('accounting.invoices.store');
+
+        Route::get('reports/customer-recap', [\App\Http\Controllers\ReportController::class, 'customerRecap'])->name('reports.customer_recap');
     });
 
     // Manager actions (restricted to Managers)

@@ -14,7 +14,7 @@ export default function AuthSplitLayout({
         <div className="relative grid h-dvh flex-col items-center justify-center bg-background px-8 sm:px-0 lg:max-w-none lg:grid-cols-2 lg:px-0">
             <div className="relative hidden h-full flex-col overflow-hidden text-white lg:flex">
                 <img
-                    src="/8b8da7_2cd963a0eee44bc9b685b3264b6e1510~mv2_d_3072_1728_s_2.webp"
+                    src="/metinca-building.webp"
                     alt="Metinca Prima Industri"
                     className="absolute inset-0 h-full w-full object-cover"
                 />

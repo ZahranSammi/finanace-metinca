@@ -34,6 +34,8 @@ class OrderService
                 'sales_rep' => $salesRep->name,
                 'user_id' => $salesRep->id,
                 'status' => OrderStatus::PENDING,
+                'currency' => $data['currency'] ?? 'IDR',
+                'exchange_rate' => $data['exchangeRate'] ?? 1,
                 'total_amount' => $this->total($lines),
             ]);
 
@@ -55,6 +57,8 @@ class OrderService
                 'customer_id' => $data['customerId'],
                 'sales_rep' => $salesRep->name,
                 'user_id' => $salesRep->id,
+                'currency' => $data['currency'] ?? $order->currency,
+                'exchange_rate' => $data['exchangeRate'] ?? $order->exchange_rate,
                 'total_amount' => $this->total($lines),
             ]);
 

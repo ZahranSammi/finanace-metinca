@@ -38,6 +38,8 @@ export default function Rekap({ orders }: RekapProps) {
         order_id: '',
         invoice_type: 'tua_lokal',
         dp_amount: 0,
+        due_date: '',
+        delivery_date: '',
     });
 
     const grandTotalSales = React.useMemo(() => {
@@ -216,6 +218,28 @@ return { subtotal: 0, tax: 0, total: 0 };
                                 onChange={(e) => setData('dp_amount', Number(e.target.value))}
                                 placeholder="Masukkan nominal DP jika ada"
                             />
+                        </div>
+
+                        {/* Dates */}
+                        <div className="grid grid-cols-2 gap-4">
+                            <div className="grid gap-2">
+                                <Label htmlFor="due_date">{t('Jatuh Tempo', 'Due Date')}</Label>
+                                <Input
+                                    id="due_date"
+                                    type="date"
+                                    value={data.due_date}
+                                    onChange={(e) => setData('due_date', e.target.value)}
+                                />
+                            </div>
+                            <div className="grid gap-2">
+                                <Label htmlFor="delivery_date">{t('Tgl Pengiriman', 'Delivery Date')}</Label>
+                                <Input
+                                    id="delivery_date"
+                                    type="date"
+                                    value={data.delivery_date}
+                                    onChange={(e) => setData('delivery_date', e.target.value)}
+                                />
+                            </div>
                         </div>
 
                         {/* Summary Perhitungan */}

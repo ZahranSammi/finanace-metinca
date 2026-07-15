@@ -17,6 +17,8 @@ class Order extends Model
         'user_id',
         'status',
         'total_amount',
+        'currency',
+        'exchange_rate',
         'validation_notes',
         'submitted_at',
         'validated_at',

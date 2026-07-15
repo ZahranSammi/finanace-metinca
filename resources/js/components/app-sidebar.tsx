@@ -1,6 +1,6 @@
 import { Link } from '@inertiajs/react';
 import { usePage } from '@inertiajs/react';
-import { LayoutGrid, ShoppingCart, BarChart3, GitFork, Package, Users, Globe, Languages, ClipboardList, FileText, Box } from 'lucide-react';
+import { LayoutGrid, ShoppingCart, BarChart3, GitFork, Package, Users, Globe, Languages, ClipboardList, FileText, Box, Undo2 } from 'lucide-react';
 import * as React from 'react';
 import AppLogo from '@/components/app-logo';
 import { useCurrency } from '@/components/currency-context';
@@ -66,6 +66,13 @@ const mainNavItemsRaw: RawNavItem[] = [
         roles: ['staff_accounting'],
     },
     {
+        titleId: 'Rekapan per PT',
+        titleEn: 'Customer Statement',
+        href: '/reports/customer-recap',
+        icon: FileText,
+        roles: ['staff_accounting', 'manager'],
+    },
+    {
         titleId: 'Entri Pesanan',
         titleEn: 'Order Entry',
         href: '/orders',
@@ -78,6 +85,13 @@ const mainNavItemsRaw: RawNavItem[] = [
         href: '/pipeline',
         icon: GitFork,
         roles: ['staff_sales'],
+    },
+    {
+        titleId: 'Retur / Barang Reject',
+        titleEn: 'Item Returns',
+        href: '/returns',
+        icon: Undo2,
+        roles: ['staff_sales', 'staff_accounting', 'manager'],
     },
     {
         titleId: 'Pelanggan',

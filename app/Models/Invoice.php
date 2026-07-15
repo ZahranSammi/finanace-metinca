@@ -17,11 +17,23 @@ class Invoice extends Model
         'tax_amount',
         'dp_amount',
         'total_amount',
+        'currency',
+        'exchange_rate',
+        'due_date',
+        'delivery_date',
         'status',
     ];
 
     public function order()
     {
         return $this->belongsTo(Order::class);
+    }
+
+    protected function casts(): array
+    {
+        return [
+            'due_date' => 'date',
+            'delivery_date' => 'date',
+        ];
     }
 }

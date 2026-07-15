@@ -49,6 +49,8 @@ export default function EditOrder({ order, customers, products }: EditOrderProps
     const { data, setData, put, processing } = useForm({
         customerId: order.customerId || customers[0]?.id || 0,
         salesRep: order.sales_rep || '',
+        currency: (order as any).currency || 'IDR',
+        exchangeRate: (order as any).exchangeRate || 1,
         items: order.items || [] as OrderLineItem[],
     });
 
@@ -158,6 +160,35 @@ return;
                                         {t('Otomatis diisi dari akun Anda.', 'Automatically set from your account.')}
                                     </p>
                                 </div>
+                                <div className="space-y-2">
+                                    <Label htmlFor="currency">{t('Mata Uang', 'Currency')}</Label>
+                                    <Select
+                                        value={data.currency}
+                                        onValueChange={(value) => setData('currency', value)}
+                                    >
+                                        <SelectTrigger id="currency" className="w-full">
+                                            <SelectValue placeholder={t('Pilih Mata Uang', 'Select Currency')} />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="IDR">IDR (Rupiah)</SelectItem>
+                                            <SelectItem value="EUR">EUR (Euro)</SelectItem>
+                                            <SelectItem value="USD">USD (US Dollar)</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                                {data.currency !== 'IDR' && (
+                                    <div className="space-y-2">
+                                        <Label htmlFor="exchange-rate">{t('Nilai Tukar (Exchange Rate)', 'Exchange Rate')}</Label>
+                                        <Input
+                                            id="exchange-rate"
+                                            type="number"
+                                            step="0.000001"
+                                            min="0"
+                                            value={data.exchangeRate}
+                                            onChange={(e) => setData('exchangeRate', Number(e.target.value))}
+                                        />
+                                    </div>
+                                )}
                             </CardContent>
                         </Card>
 

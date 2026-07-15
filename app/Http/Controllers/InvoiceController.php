@@ -41,6 +41,8 @@ class InvoiceController extends Controller
             'order_id' => 'required|exists:orders,id',
             'invoice_type' => 'required|in:tua_lokal,inter_expor',
             'dp_amount' => 'nullable|numeric|min:0',
+            'due_date' => 'nullable|date',
+            'delivery_date' => 'nullable|date',
         ]);
 
         $order = Order::with('items')->findOrFail($request->order_id);
@@ -82,6 +84,10 @@ class InvoiceController extends Controller
             'tax_amount' => round($taxAmount, 2),
             'dp_amount' => round($dpAmount, 2),
             'total_amount' => round($totalAmount, 2),
+            'currency' => $order->currency ?? 'IDR',
+            'exchange_rate' => $order->exchange_rate ?? 1,
+            'due_date' => $request->due_date,
+            'delivery_date' => $request->delivery_date,
             'status' => 'Draft',
         ]);
 
