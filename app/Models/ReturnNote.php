@@ -6,11 +6,18 @@ use Illuminate\Database\Eloquent\Model;
 
 class ReturnNote extends Model
 {
-    protected $fillable = ['type', 'reference_id', 'customer_id', 'date'];
+    protected $fillable = [
+        'order_id', 
+        'type', 
+        'status', 
+        'total_amount', 
+        'reason', 
+        'date'
+    ];
 
-    public function customer()
+    public function order()
     {
-        return $this->belongsTo(Customer::class);
+        return $this->belongsTo(Order::class);
     }
 
     public function items()

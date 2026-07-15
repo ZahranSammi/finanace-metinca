@@ -4,7 +4,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\SalesPortalController;
 use App\Http\Controllers\InvoiceController;
 
-Route::inertia('/', 'welcome')->name('home');
+Route::redirect('/', '/login');
 
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('dashboard', [SalesPortalController::class, 'dashboard'])->name('dashboard');

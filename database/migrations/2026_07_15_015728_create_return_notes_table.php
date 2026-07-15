@@ -13,9 +13,12 @@ return new class extends Migration
     {
         Schema::create('return_notes', function (Blueprint $table) {
             $table->id();
+            $table->string('order_id');
+            $table->foreign('order_id')->references('id')->on('orders')->onDelete('cascade');
             $table->enum('type', ['credit_internal', 'debit_external']);
-            $table->string('reference_id')->nullable(); // PO ID or Order ID
-            $table->foreignId('customer_id')->nullable()->constrained()->onDelete('set null');
+            $table->string('status')->default('Pending');
+            $table->decimal('total_amount', 15, 2)->default(0);
+            $table->text('reason')->nullable();
             $table->date('date');
             $table->timestamps();
         });

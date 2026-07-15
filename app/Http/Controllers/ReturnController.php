@@ -61,6 +61,7 @@ class ReturnController extends Controller
                 'status' => 'Pending',
                 'total_amount' => $totalAmount,
                 'reason' => $data['reason'],
+                'date' => now()->toDateString(),
             ]);
 
             foreach ($data['items'] as $item) {
