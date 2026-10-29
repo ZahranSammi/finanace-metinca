@@ -10,10 +10,15 @@ export default function AppLayout({
     breadcrumbs?: BreadcrumbItem[];
     children: React.ReactNode;
 }) {
+    const effectiveBreadcrumbs: BreadcrumbItem[] =
+        breadcrumbs && breadcrumbs.length > 0
+            ? breadcrumbs
+            : (((children as any)?.type?.layout?.breadcrumbs as BreadcrumbItem[]) ?? []);
+
     return (
         <LanguageProvider>
             <CurrencyProvider>
-                <AppLayoutTemplate breadcrumbs={breadcrumbs}>
+                <AppLayoutTemplate breadcrumbs={effectiveBreadcrumbs}>
                     {children}
                 </AppLayoutTemplate>
             </CurrencyProvider>

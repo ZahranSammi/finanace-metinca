@@ -45,6 +45,11 @@ class User extends Authenticatable implements MustVerifyEmail, PasskeyUser
         return $this->role === \App\Support\UserRole::MANAGER;
     }
 
+    public function appNotifications()
+    {
+        return $this->hasMany(AppNotification::class, 'user_id');
+    }
+
     /**
      * The attributes that should be hidden for serialization.
      *

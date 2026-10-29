@@ -44,18 +44,18 @@ export default function Dashboard({ metrics, chart_data, recent_orders }: Dashbo
     return (
         <>
             <Head title={t('Dasbor Utama', 'Dashboard Overview')} />
-            <div className="flex flex-1 flex-col gap-6 p-6">
+            <div className="flex min-w-0 flex-1 flex-col gap-4 p-4 sm:gap-6 sm:p-6">
                 <div className="flex items-center justify-between">
                     <div>
                         <h1 className="text-3xl font-bold tracking-tight">
-                            {role === 'staff_sales' ? t('Dasbor Penjualan', 'Sales Representative Dashboard') :
-                             role === 'staff_accounting' ? t('Dasbor Akuntansi', 'Accounting Dashboard') :
-                             t('Dasbor Manajer', 'Manager Dashboard')}
+                            {role === 'staff_sales' ? t('Dasbor Penjualan (Staff Sales)', 'Sales Representative Dashboard') :
+                             role === 'staff_accounting' ? t('Dasbor Staff Accounting', 'Accounting Staff Dashboard') :
+                             t('Dasbor Manager Accounting', 'Accounting Manager Dashboard')}
                         </h1>
                         <p className="text-muted-foreground text-sm font-medium">
                             {role === 'staff_sales' ? t('Monitor pesanan Anda dan status persetujuan transaksi.', 'Monitor your orders and transaction approval status.') :
-                             role === 'staff_accounting' ? t('Validasi pesanan masuk dan awasi rekap penjualan.', 'Validate incoming orders and oversee sales recaps.') :
-                             t('Monitor performa keuangan perusahaan, grafik analitik, dan klasemen perwakilan.', 'Monitor company financial performance, analytical graphs, and standings.')}
+                             role === 'staff_accounting' ? t('Validasi pesanan masuk, kelola Purchase Order, dan awasi rekap penjualan.', 'Validate incoming orders, manage Purchase Orders, and oversee sales recaps.') :
+                             t('Tinjau laporan detail penjualan, validasi Purchase Order, dan pantau Laporan Neraca perusahaan.', 'Review detailed sales reports, validate Purchase Orders, and monitor the company Balance Sheet.')}
                         </p>
                     </div>
                 </div>
@@ -70,7 +70,7 @@ export default function Dashboard({ metrics, chart_data, recent_orders }: Dashbo
                 )}
 
                 {/* KPI Metrics Grid */}
-                <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-5">
                     <Card className="border border-sidebar-border/75">
                         <CardHeader className="flex flex-row items-center justify-between pb-2">
                             <CardTitle className="text-sm font-medium">{t('Total Penjualan', 'Total Sales')}</CardTitle>
@@ -158,9 +158,9 @@ export default function Dashboard({ metrics, chart_data, recent_orders }: Dashbo
                     </div>
                 )}
 
-                <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-7 mt-2">
+                <div className="mt-2 grid grid-cols-1 gap-6 xl:grid-cols-7">
                     {/* Sales Performance Chart */}
-                    <Card className="lg:col-span-4 border border-sidebar-border/75">
+                    <Card className="xl:col-span-4 border border-sidebar-border/75">
                         <CardHeader>
                             <CardTitle>{t('Tren Penjualan', 'Sales Trend')}</CardTitle>
                             <CardDescription>{t('Grafik penjualan bulanan untuk tahun berjalan', 'Monthly sales figures for the current year')}</CardDescription>
@@ -199,7 +199,7 @@ export default function Dashboard({ metrics, chart_data, recent_orders }: Dashbo
                     </Card>
 
                     {/* Recent Orders List */}
-                    <Card className="lg:col-span-3 border border-sidebar-border/75">
+                    <Card className="xl:col-span-3 border border-sidebar-border/75">
                         <CardHeader className="flex flex-row items-center justify-between">
                             <div>
                                 <CardTitle>{t('Pesanan Terbaru', 'Recent Orders')}</CardTitle>

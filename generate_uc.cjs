@@ -13,21 +13,26 @@ actor "Staff Sales" as sales
 actor "Staff Accounting" as acc
 actor "Manager Accounting" as mgr
 
-rectangle "Sistem Perekapan Penjualan" {
+rectangle "Sistem Perekapan Penjualan & Akuntansi Metinca" {
   usecase "Menginput & Mengirim Invoice Baru" as UC1
   usecase "Menandai Invoice Lunas" as UC2
+  usecase "Membuat & Mengajukan Purchase Order (PO)" as UC_PO1
   usecase "Memvalidasi / Menolak Invoice" as UC3
-  usecase "Membuat & Mengirim Laporan Perekapan" as UC4
-  usecase "Memvalidasi / Menolak Laporan" as UC5
+  usecase "Membuat & Mengirim Laporan Detail & Neraca" as UC4
+  usecase "Memvalidasi / Menolak Laporan & Neraca" as UC5
+  usecase "Menyetujui / Menolak Purchase Order (PO)" as UC_PO2
 }
 
 sales --> UC1
 sales --> UC2
+sales --> UC_PO1
 
 acc --> UC3
 acc --> UC4
+acc --> UC_PO1
 
 UC5 <-- mgr
+UC_PO2 <-- mgr
 @enduml
 `;
 

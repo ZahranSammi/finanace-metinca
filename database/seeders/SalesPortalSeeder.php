@@ -2,12 +2,20 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Seeder;
+use App\Http\Controllers\AccountingController;
+use App\Models\AppNotification;
 use App\Models\Customer;
-use App\Models\Product;
+use App\Models\Invoice;
+use App\Models\ManagerReport;
 use App\Models\Order;
 use App\Models\OrderItem;
+use App\Models\Product;
+use App\Models\ReturnNote;
+use App\Models\ReturnNoteItem;
+use App\Models\User;
+use App\Support\UserRole;
 use Carbon\Carbon;
+use Illuminate\Database\Seeder;
 
 class SalesPortalSeeder extends Seeder
 {
@@ -39,127 +47,145 @@ class SalesPortalSeeder extends Seeder
             $productModels[] = Product::firstOrCreate(['code' => $p['code']], $p);
         }
 
-        // We want data spread across the last few months of 2026:
-        // E.g. Jan, Feb, Mar, Apr, May, Jun
-        // And we want multiple statuses: 'Pending', 'Submitted', 'Validated', 'Rejected'
-        // User 'Staff Sales' is sales_rep for sales@example.com
-        
+        $staffSalesUser = User::where('email', 'sales@example.com')->first()
+            ?? User::where('role', UserRole::SALES)->first();
+        $staffAccountingUser = User::where('role', UserRole::ACCOUNTING)->first();
+        $managerUser = User::where('role', UserRole::MANAGER)->first();
+
+        $salesUserId = $staffSalesUser ? $staffSalesUser->id : 2;
+        $accountingUserId = $staffAccountingUser ? $staffAccountingUser->id : 3;
+        $managerUserId = $managerUser ? $managerUser->id : 4;
+
         $ordersData = [
-            // January
+            // January - Lunas
             [
                 'id' => 'ORD-101-A1',
                 'date' => '2026-01-15 10:00:00',
-                'customer_idx' => 0, // Acme
+                'customer_idx' => 0,
                 'sales_rep' => 'Staff Sales',
-                'status' => 'Validated',
+                'status' => 'lunas',
+                'invoice_status' => 'lunas',
+                'invoice_type' => 'domestik',
+                'dp_amount' => 200000,
                 'items' => [
-                    ['product_idx' => 0, 'quantity' => 20], // Printer Paper
-                    ['product_idx' => 1, 'quantity' => 5],  // Ballpoint Pen
-                ]
+                    ['product_idx' => 0, 'quantity' => 20],
+                    ['product_idx' => 1, 'quantity' => 5],
+                ],
             ],
             [
                 'id' => 'ORD-102-B2',
                 'date' => '2026-01-28 14:30:00',
-                'customer_idx' => 1, // Globex
+                'customer_idx' => 1,
                 'sales_rep' => 'Staff Sales',
-                'status' => 'Validated',
+                'status' => 'lunas',
+                'invoice_status' => 'lunas',
+                'invoice_type' => 'domestik',
+                'dp_amount' => 0,
                 'items' => [
-                    ['product_idx' => 3, 'quantity' => 2],  // Mouse Wireless
-                ]
+                    ['product_idx' => 3, 'quantity' => 10],
+                ],
             ],
-            // February
+            // February - Lunas
             [
                 'id' => 'ORD-201-C3',
                 'date' => '2026-02-10 11:15:00',
-                'customer_idx' => 2, // Initech
+                'customer_idx' => 2,
                 'sales_rep' => 'Staff Sales',
-                'status' => 'Validated',
+                'status' => 'lunas',
+                'invoice_status' => 'lunas',
+                'invoice_type' => 'domestik',
+                'dp_amount' => 150000,
                 'items' => [
-                    ['product_idx' => 2, 'quantity' => 10], // Stapler Standard
-                    ['product_idx' => 0, 'quantity' => 15], // Printer Paper
-                ]
+                    ['product_idx' => 2, 'quantity' => 10],
+                    ['product_idx' => 0, 'quantity' => 15],
+                ],
             ],
-            // March
+            // March - Utang & Rejected
             [
                 'id' => 'ORD-301-D4',
                 'date' => '2026-03-05 09:00:00',
-                'customer_idx' => 3, // Soylent Corp
+                'customer_idx' => 3,
                 'sales_rep' => 'Staff Sales',
-                'status' => 'Validated',
+                'status' => 'utang',
+                'invoice_status' => 'utang',
+                'invoice_type' => 'domestik',
+                'dp_amount' => 100000,
                 'items' => [
-                    ['product_idx' => 3, 'quantity' => 5], // Mouse Wireless
-                ]
+                    ['product_idx' => 3, 'quantity' => 12],
+                ],
             ],
             [
                 'id' => 'ORD-302-E5',
                 'date' => '2026-03-22 16:45:00',
-                'customer_idx' => 4, // Massive Dynamic
+                'customer_idx' => 4,
                 'sales_rep' => 'Staff Sales',
                 'status' => 'Rejected',
+                'invoice_status' => 'rejected',
+                'invoice_type' => 'domestik',
+                'dp_amount' => 0,
                 'items' => [
-                    ['product_idx' => 1, 'quantity' => 12], // Ballpoint Pen
-                ]
+                    ['product_idx' => 1, 'quantity' => 12],
+                ],
             ],
-            // April
+            // April - Utang
             [
                 'id' => 'ORD-401-F6',
                 'date' => '2026-04-12 13:20:00',
-                'customer_idx' => 5, // Umbrella Corp
+                'customer_idx' => 5,
                 'sales_rep' => 'Staff Sales',
-                'status' => 'Validated',
+                'status' => 'utang',
+                'invoice_status' => 'utang',
+                'invoice_type' => 'international',
+                'dp_amount' => 500000,
                 'items' => [
-                    ['product_idx' => 0, 'quantity' => 50], // Printer Paper
-                    ['product_idx' => 3, 'quantity' => 10], // Mouse Wireless
-                ]
+                    ['product_idx' => 0, 'quantity' => 50],
+                    ['product_idx' => 3, 'quantity' => 10],
+                ],
             ],
-            // May
+            // May - Utang & Submitted
             [
                 'id' => 'ORD-501-G7',
                 'date' => '2026-05-18 10:30:00',
-                'customer_idx' => 0, // Acme
+                'customer_idx' => 0,
                 'sales_rep' => 'Staff Sales',
-                'status' => 'Validated',
+                'status' => 'utang',
+                'invoice_status' => 'utang',
+                'invoice_type' => 'domestik',
+                'dp_amount' => 0,
                 'items' => [
-                    ['product_idx' => 2, 'quantity' => 8],  // Stapler Standard
-                    ['product_idx' => 3, 'quantity' => 4],  // Mouse Wireless
-                ]
+                    ['product_idx' => 2, 'quantity' => 8],
+                    ['product_idx' => 3, 'quantity' => 4],
+                ],
             ],
             [
                 'id' => 'ORD-502-H8',
                 'date' => '2026-05-25 15:00:00',
-                'customer_idx' => 1, // Globex
+                'customer_idx' => 1,
                 'sales_rep' => 'Staff Sales',
                 'status' => 'Submitted',
+                'invoice_status' => 'submitted',
+                'invoice_type' => 'domestik',
+                'dp_amount' => 0,
                 'items' => [
-                    ['product_idx' => 0, 'quantity' => 30], // Printer Paper
-                ]
+                    ['product_idx' => 0, 'quantity' => 30],
+                ],
             ],
-            // June
+            // June - Draft
             [
                 'id' => 'ORD-601-I9',
                 'date' => '2026-06-02 11:00:00',
-                'customer_idx' => 2, // Initech
+                'customer_idx' => 2,
                 'sales_rep' => 'Staff Sales',
                 'status' => 'Pending',
+                'invoice_status' => 'draft',
+                'invoice_type' => 'domestik',
+                'dp_amount' => 0,
                 'items' => [
-                    ['product_idx' => 1, 'quantity' => 20], // Ballpoint Pen
-                    ['product_idx' => 2, 'quantity' => 5],  // Stapler Standard
-                ]
-            ],
-            [
-                'id' => 'ORD-602-J0',
-                'date' => '2026-06-15 14:00:00',
-                'customer_idx' => 4, // Massive Dynamic
-                'sales_rep' => 'Staff Sales',
-                'status' => 'Pending',
-                'items' => [
-                    ['product_idx' => 3, 'quantity' => 8], // Mouse Wireless
-                ]
+                    ['product_idx' => 1, 'quantity' => 20],
+                    ['product_idx' => 2, 'quantity' => 5],
+                ],
             ],
         ];
-
-        $staffSalesUser = \App\Models\User::where('role', 'staff_sales')->first();
-        $salesUserId = $staffSalesUser ? $staffSalesUser->id : 2;
 
         foreach ($ordersData as $oData) {
             if (Order::where('id', $oData['id'])->exists()) {
@@ -170,19 +196,27 @@ class SalesPortalSeeder extends Seeder
                 $p = $productModels[$item['product_idx']];
                 $subtotal += $p->price * $item['quantity'];
             }
-            $totalAmount = $subtotal * 1.11;
+
+            $taxPercent = $oData['invoice_type'] === 'international' ? 0 : 11;
+            $taxAmount = round($subtotal * ($taxPercent / 100), 2);
+            $dpAmount = (float) ($oData['dp_amount'] ?? 0);
+            $totalAmount = round($subtotal + $taxAmount - $dpAmount, 2);
+
+            $dateCarbon = Carbon::parse($oData['date']);
+            $isValidated = in_array($oData['status'], ['utang', 'lunas'], true);
+            $isSubmitted = in_array($oData['status'], ['Submitted', 'utang', 'lunas'], true);
 
             $order = Order::create([
                 'id' => $oData['id'],
                 'user_id' => $salesUserId,
-                'date_raised' => Carbon::parse($oData['date']),
+                'date_raised' => $dateCarbon,
                 'customer_id' => $customerModels[$oData['customer_idx']]->id,
                 'sales_rep' => $oData['sales_rep'],
                 'status' => $oData['status'],
-                'total_amount' => round($totalAmount, 2),
-                'submitted_at' => in_array($oData['status'], ['Submitted', 'Validated']) ? Carbon::parse($oData['date'])->addMinutes(30) : null,
-                'validated_at' => $oData['status'] === 'Validated' ? Carbon::parse($oData['date'])->addHours(2) : null,
-                'validated_by' => $oData['status'] === 'Validated' ? 3 : null,
+                'total_amount' => $totalAmount,
+                'submitted_at' => $isSubmitted ? $dateCarbon->copy()->addMinutes(30) : null,
+                'validated_at' => $isValidated ? $dateCarbon->copy()->addHours(2) : null,
+                'validated_by' => $isValidated ? $accountingUserId : null,
             ]);
 
             foreach ($oData['items'] as $item) {
@@ -195,21 +229,138 @@ class SalesPortalSeeder extends Seeder
                 ]);
             }
 
-            $taxPercent = 11;
-            $taxAmount = round($totalAmount - $subtotal, 2);
-            \App\Models\Invoice::create([
+            Invoice::create([
                 'order_id' => $order->id,
-                'invoice_type' => 'domestik',
+                'invoice_type' => $oData['invoice_type'],
                 'subtotal' => round($subtotal, 2),
                 'tax_percent' => $taxPercent,
                 'tax_amount' => $taxAmount,
-                'dp_amount' => 0,
-                'total_amount' => round($totalAmount, 2),
+                'dp_amount' => $dpAmount,
+                'total_amount' => $totalAmount,
                 'currency' => 'IDR',
                 'exchange_rate' => 1,
-                'status' => $order->status === 'Validated' ? 'utang' : ($order->status === 'Submitted' ? 'Submitted' : 'Pending'),
-                'created_at' => Carbon::parse($oData['date']),
-                'updated_at' => Carbon::parse($oData['date']),
+                'due_date' => $dateCarbon->copy()->addDays(14)->toDateString(),
+                'delivery_date' => $dateCarbon->copy()->addDays(5)->toDateString(),
+                'status' => $oData['invoice_status'],
+                'submitted_at' => $isSubmitted ? $dateCarbon->copy()->addMinutes(30) : null,
+                'validated_at' => $isValidated ? $dateCarbon->copy()->addHours(2) : null,
+                'validated_by' => $isValidated ? $accountingUserId : null,
+                'created_at' => $dateCarbon,
+                'updated_at' => $dateCarbon,
+            ]);
+        }
+
+        // Seed a sample approved Return Note so reports & Neraca show return adjustments
+        if (ReturnNote::count() === 0) {
+            $targetOrder = Order::find('ORD-501-G7') ?? Order::first();
+            if ($targetOrder) {
+                $rtn = ReturnNote::create([
+                    'order_id' => $targetOrder->id,
+                    'type' => 'credit_internal',
+                    'status' => 'Approved',
+                    'total_amount' => 90000,
+                    'reason' => '2 unit Stapler mengalami kerusakan kemasan saat pengiriman.',
+                    'date' => now()->subDays(4)->toDateString(),
+                ]);
+                ReturnNoteItem::create([
+                    'return_note_id' => $rtn->id,
+                    'product_id' => $productModels[2]->id,
+                    'quantity' => 2,
+                    'price_per_item' => 45000,
+                ]);
+            }
+        }
+
+        // Seed sample detailed ManagerReport so Manager Accounting immediately sees rich reports
+        if (ManagerReport::count() === 0) {
+            $yearStart = Carbon::create(2026, 1, 1)->startOfYear();
+            $yearEnd = Carbon::create(2026, 12, 31)->endOfYear();
+
+            ManagerReport::create([
+                'type' => 'yearly',
+                'period_start' => $yearStart,
+                'period_end' => $yearEnd,
+                'metrics_data' => AccountingController::buildDetailedReportPayload($yearStart, $yearEnd),
+                'status' => 'submitted',
+                'created_by' => $accountingUserId,
+            ]);
+
+            $monthStart = Carbon::create(2026, 5, 1)->startOfMonth();
+            $monthEnd = Carbon::create(2026, 5, 31)->endOfMonth();
+
+            ManagerReport::create([
+                'type' => 'monthly',
+                'period_start' => $monthStart,
+                'period_end' => $monthEnd,
+                'metrics_data' => AccountingController::buildDetailedReportPayload($monthStart, $monthEnd),
+                'status' => 'validated',
+                'created_by' => $accountingUserId,
+                'validated_by' => $managerUserId,
+                'validated_at' => now()->subDays(2),
+                'validation_notes' => 'Laporan rincian transaksi invoice, customer, dan produk telah sesuai dengan buku besar.',
+            ]);
+        }
+
+        // Seed initial In-App Notifications across all 3 actors
+        if (AppNotification::count() === 0) {
+            // For Staff Accounting
+            AppNotification::create([
+                'user_id' => $accountingUserId,
+                'sender_id' => $salesUserId,
+                'type' => 'invoice_submitted',
+                'title' => 'Invoice Baru Menunggu Validasi (INV-00008)',
+                'message' => 'Staff Sales mengirim INV-00008 untuk customer Globex Inc. ke Kotak Masuk Validasi.',
+                'action_url' => '/accounting/inbox',
+                'is_read' => false,
+            ]);
+            AppNotification::create([
+                'user_id' => $accountingUserId,
+                'sender_id' => $managerUserId,
+                'type' => 'report_validated',
+                'title' => 'Laporan Bulanan Disetujui Manager',
+                'message' => 'Manager Accounting telah memvalidasi Laporan Bulanan periode Mei 2026.',
+                'action_url' => '/accounting/inbox',
+                'is_read' => false,
+            ]);
+
+            // For Manager Accounting
+            AppNotification::create([
+                'user_id' => $managerUserId,
+                'sender_id' => $accountingUserId,
+                'type' => 'report_submitted',
+                'title' => 'Laporan Tahunan Baru Menunggu Validasi',
+                'message' => 'Staff Accounting mengirim Laporan Detail Tahunan periode 2026 ke Inbox Laporan untuk ditinjau.',
+                'action_url' => '/manager/reports',
+                'is_read' => false,
+            ]);
+            AppNotification::create([
+                'user_id' => $managerUserId,
+                'sender_id' => $salesUserId,
+                'type' => 'po_submitted',
+                'title' => 'Pengajuan Purchase Order Baru (PO-2026-037)',
+                'message' => 'Staff Sales mengajukan Purchase Order PO-2026-037 ke supplier CV. Teknologi Maju senilai Rp 9.300.000 untuk divalidasi.',
+                'action_url' => '/purchase-orders',
+                'is_read' => false,
+            ]);
+
+            // For Staff Sales
+            AppNotification::create([
+                'user_id' => $salesUserId,
+                'sender_id' => $accountingUserId,
+                'type' => 'invoice_validated',
+                'title' => 'Invoice Tervalidasi (INV-00007)',
+                'message' => 'Staff Accounting telah memvalidasi INV-00007 untuk customer Acme Corporation Ltd.',
+                'action_url' => '/sales/invoice-rekap',
+                'is_read' => false,
+            ]);
+            AppNotification::create([
+                'user_id' => $salesUserId,
+                'sender_id' => $accountingUserId,
+                'type' => 'return_approved',
+                'title' => 'Retur Barang Disetujui (#1)',
+                'message' => 'Staff Accounting telah menyetujui retur barang untuk Order ORD-501-G7 senilai Rp 90.000.',
+                'action_url' => '/returns',
+                'is_read' => false,
             ]);
         }
     }

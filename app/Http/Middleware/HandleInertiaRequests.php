@@ -2,6 +2,10 @@
 
 namespace App\Http\Middleware;
 
+use App\Models\AppNotification;
+use App\Models\Invoice;
+use App\Models\ManagerReport;
+use App\Models\PurchaseOrder;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
 
@@ -35,12 +39,55 @@ class HandleInertiaRequests extends Middleware
      */
     public function share(Request $request): array
     {
+        $user = $request->user();
+
+        $notificationsData = [
+            'unread_count' => 0,
+            'recent' => [],
+        ];
+
+        $sidebarBadges = [
+            'accounting_inbox' => 0,
+            'manager_reports' => 0,
+            'purchase_orders' => 0,
+        ];
+
+        if ($user) {
+            $notificationsData['unread_count'] = AppNotification::where('user_id', $user->id)
+                ->where('is_read', false)
+                ->count();
+
+            $notificationsData['recent'] = AppNotification::with('sender')
+                ->where('user_id', $user->id)
+                ->orderBy('created_at', 'desc')
+                ->limit(15)
+                ->get()
+                ->map(fn (AppNotification $n) => [
+                    'id' => $n->id,
+                    'type' => $n->type,
+                    'title' => $n->title,
+                    'message' => $n->message,
+                    'action_url' => $n->action_url,
+                    'is_read' => (bool) $n->is_read,
+                    'sender_name' => $n->sender?->name ?? 'Sistem',
+                    'created_at' => $n->created_at?->diffForHumans() ?? '-',
+                ])
+                ->values()
+                ->all();
+
+            $sidebarBadges['accounting_inbox'] = Invoice::where('status', 'submitted')->count();
+            $sidebarBadges['manager_reports'] = ManagerReport::where('status', 'submitted')->count();
+            $sidebarBadges['purchase_orders'] = PurchaseOrder::where('status', 'Submitted')->count();
+        }
+
         return [
             ...parent::share($request),
             'name' => config('app.name'),
             'auth' => [
-                'user' => $request->user(),
+                'user' => $user,
             ],
+            'notifications' => $notificationsData,
+            'sidebar_badges' => $sidebarBadges,
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
             'flash' => [
                 'success' => $request->session()->get('success'),

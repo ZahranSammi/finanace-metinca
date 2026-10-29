@@ -22,11 +22,16 @@ class UserSeeder extends Seeder
             ['name' => 'Test User', 'email' => 'test@example.com', 'role' => UserRole::SALES],
             ['name' => 'Staff Sales', 'email' => 'sales@example.com', 'role' => UserRole::SALES],
             ['name' => 'Staff Accounting', 'email' => 'accounting@example.com', 'role' => UserRole::ACCOUNTING],
-            ['name' => 'Manager User', 'email' => 'manager@example.com', 'role' => UserRole::MANAGER],
+            ['name' => 'Manager Accounting', 'email' => 'manager@example.com', 'role' => UserRole::MANAGER],
         ];
 
         foreach ($users as $attributes) {
-            if (User::where('email', $attributes['email'])->exists()) {
+            $existing = User::where('email', $attributes['email'])->first();
+            if ($existing) {
+                if ($existing->name !== $attributes['name']) {
+                    $existing->update(['name' => $attributes['name']]);
+                }
+
                 continue;
             }
 

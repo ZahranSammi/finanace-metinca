@@ -23,6 +23,9 @@ class Invoice extends Model
         'due_date',
         'delivery_date',
         'status',
+        'validated_at',
+        'validated_by',
+        'validation_notes',
     ];
 
     public function order()
@@ -35,6 +38,7 @@ class Invoice extends Model
         return [
             'due_date' => 'date',
             'delivery_date' => 'date',
+            'validated_at' => 'datetime',
         ];
     }
 }

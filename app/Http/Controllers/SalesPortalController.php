@@ -5,9 +5,11 @@ namespace App\Http\Controllers;
 use App\Models\Customer;
 use App\Models\Order;
 use App\Models\Product;
+use App\Services\NotificationService;
 use App\Services\OrderService;
 use App\Support\OrderStatus;
 use App\Support\SalesTrend;
+use App\Support\UserRole;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
@@ -128,6 +130,15 @@ class SalesPortalController extends Controller
             'status' => OrderStatus::SUBMITTED,
             'submitted_at' => now(),
         ]);
+
+        NotificationService::notifyRole(
+            UserRole::ACCOUNTING,
+            'Pesanan Baru Dikirim (' . $order->id . ')',
+            ($request->user()?->name ?? 'Staff Sales') . ' mengirim pesanan ' . $order->id . ' untuk divalidasi oleh Accounting.',
+            '/accounting/inbox',
+            'order_submitted',
+            $request->user()?->id
+        );
 
         return redirect()->route('orders.index')->with('success', 'Order submitted to accounting successfully.');
     }

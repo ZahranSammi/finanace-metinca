@@ -5,9 +5,12 @@ namespace App\Http\Controllers;
 use App\Models\Order;
 use App\Models\ReturnNote;
 use App\Models\ReturnNoteItem;
+use App\Services\NotificationService;
+use App\Support\UserRole;
 use Illuminate\Http\Request;
-use Inertia\Inertia;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Inertia\Inertia;
 
 class ReturnController extends Controller
 {
@@ -16,7 +19,7 @@ class ReturnController extends Controller
         $returns = ReturnNote::with(['order.customer'])
             ->orderBy('created_at', 'desc')
             ->get()
-            ->map(fn($rtn) => [
+            ->map(fn ($rtn) => [
                 'id' => $rtn->id,
                 'order_id' => $rtn->order_id,
                 'customer_name' => $rtn->order->customer->name ?? '-',
@@ -52,8 +55,8 @@ class ReturnController extends Controller
             'items.*.price' => 'required|numeric|min:0',
         ]);
 
-        DB::transaction(function () use ($data) {
-            $totalAmount = collect($data['items'])->sum(fn($item) => $item['quantity'] * $item['price']);
+        $returnNote = DB::transaction(function () use ($data) {
+            $totalAmount = collect($data['items'])->sum(fn ($item) => $item['quantity'] * $item['price']);
 
             $returnNote = ReturnNote::create([
                 'order_id' => $data['order_id'],
@@ -72,18 +75,29 @@ class ReturnController extends Controller
                     'price_per_item' => $item['price'],
                 ]);
             }
+
+            return $returnNote;
         });
+
+        NotificationService::notifyRole(
+            UserRole::ACCOUNTING,
+            'Pengajuan Retur Barang Baru (#' . $returnNote->id . ')',
+            ($request->user()?->name ?? 'Staff Sales') . ' mengajukan retur barang untuk Order ' . $returnNote->order_id . ' senilai Rp ' . number_format((float) $returnNote->total_amount, 0, ',', '.') . '.',
+            '/returns',
+            'return_submitted',
+            Auth::id()
+        );
 
         return redirect()->route('returns.index')->with('success', 'Return note created successfully.');
     }
 
     public function approve($id)
     {
-        $returnNote = ReturnNote::findOrFail($id);
+        $returnNote = ReturnNote::with('order')->findOrFail($id);
 
         DB::transaction(function () use ($returnNote) {
             $returnNote->update(['status' => 'Approved']);
-            
+
             $order = $returnNote->order;
             if ($order) {
                 $order->total_amount = max(0, $order->total_amount - $returnNote->total_amount);
@@ -91,13 +105,56 @@ class ReturnController extends Controller
             }
         });
 
+        $senderName = Auth::user()?->name ?? 'Staff Accounting';
+        if ($returnNote->order?->user_id) {
+            NotificationService::notifyUser(
+                $returnNote->order->user_id,
+                'Retur Barang Disetujui (#' . $returnNote->id . ')',
+                $senderName . ' telah menyetujui retur barang untuk Order ' . $returnNote->order_id . ' senilai Rp ' . number_format((float) $returnNote->total_amount, 0, ',', '.') . '.',
+                '/returns',
+                'return_approved',
+                Auth::id()
+            );
+        } else {
+            NotificationService::notifyRole(
+                UserRole::SALES,
+                'Retur Barang Disetujui (#' . $returnNote->id . ')',
+                $senderName . ' telah menyetujui retur barang untuk Order ' . $returnNote->order_id . '.',
+                '/returns',
+                'return_approved',
+                Auth::id()
+            );
+        }
+
         return redirect()->back()->with('success', 'Return note approved and order total adjusted.');
     }
 
     public function reject($id)
     {
-        $returnNote = ReturnNote::findOrFail($id);
+        $returnNote = ReturnNote::with('order')->findOrFail($id);
         $returnNote->update(['status' => 'Rejected']);
+
+        $senderName = Auth::user()?->name ?? 'Staff Accounting';
+        if ($returnNote->order?->user_id) {
+            NotificationService::notifyUser(
+                $returnNote->order->user_id,
+                'Retur Barang Ditolak (#' . $returnNote->id . ')',
+                $senderName . ' menolak pengajuan retur barang untuk Order ' . $returnNote->order_id . '.',
+                '/returns',
+                'return_rejected',
+                Auth::id()
+            );
+        } else {
+            NotificationService::notifyRole(
+                UserRole::SALES,
+                'Retur Barang Ditolak (#' . $returnNote->id . ')',
+                $senderName . ' menolak pengajuan retur barang untuk Order ' . $returnNote->order_id . '.',
+                '/returns',
+                'return_rejected',
+                Auth::id()
+            );
+        }
+
         return redirect()->back()->with('success', 'Return note rejected.');
     }
 }

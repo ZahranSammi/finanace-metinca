@@ -71,11 +71,38 @@ erDiagram
     
     purchase_orders {
         bigint id PK
+        string po_number
         bigint supplier_id FK
         bigint plant_id FK
+        bigint created_by FK
+        bigint approved_by FK
         date date
+        date expected_date
         string status
+        string payment_status
         decimal total_amount
+    }
+
+    manager_reports {
+        bigint id PK
+        string type
+        date period_start
+        date period_end
+        json metrics_data
+        string status
+        bigint created_by FK
+        bigint validated_by FK
+    }
+
+    app_notifications {
+        bigint id PK
+        bigint user_id FK
+        bigint sender_id FK
+        string type
+        string title
+        text message
+        string action_url
+        timestamp read_at
     }
     
     purchase_order_items {
@@ -120,6 +147,11 @@ erDiagram
     orders ||--o{ return_notes : "has returns (1:N)"
     return_notes ||--|{ return_note_items : "contains (1:N)"
     products ||--o{ return_note_items : "is returned in (1:N)"
+
+    %% Relationships (Reporting & Notifications)
+    users ||--o{ manager_reports : "submits / validates (1:N)"
+    users ||--o{ app_notifications : "receives / sends (1:N)"
+    users ||--o{ purchase_orders : "creates / approves (1:N)"
 
 ```
 

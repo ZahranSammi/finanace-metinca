@@ -50,26 +50,26 @@ export default function CustomerRecap({ customers, selectedCustomerId, invoices 
 
     return (
         <>
-            <Head title={t('Rekapan per PT', 'Customer Statement')} />
-            <div className="flex flex-1 flex-col gap-6 p-6">
+            <Head title={t('Rekapan Penjualan per Customer', 'Sales Recap per Customer')} />
+            <div className="flex min-w-0 flex-1 flex-col gap-4 p-4 sm:gap-6 sm:p-6">
                 <div>
-                    <h1 className="text-3xl font-bold tracking-tight">{t('Rekapan per PT (Pelanggan)', 'Customer Statement')}</h1>
+                    <h1 className="text-3xl font-bold tracking-tight">{t('Rekapan Penjualan per Customer', 'Sales Recap per Customer')}</h1>
                     <p className="text-muted-foreground text-sm">
-                        {t('Rekapan tagihan per pelanggan beserta perhitungan denda keterlambatan bayar.', 'Customer statement recap including late payment penalty calculation.')}
+                        {t('Rekapan penjualan dan tagihan per customer beserta perhitungan denda keterlambatan bayar.', 'Sales and invoice statement recap per customer including late payment penalty calculation.')}
                     </p>
                 </div>
 
                 <Card className="border border-sidebar-border/70">
                     <CardHeader className="bg-muted/30 border-b pb-4">
-                        <CardTitle className="text-lg">{t('Filter Rekapan', 'Report Filter')}</CardTitle>
-                        <CardDescription>{t('Pilih pelanggan untuk melihat rincian tagihan.', 'Select a customer to view their statement details.')}</CardDescription>
+                        <CardTitle className="text-lg">{t('Filter Rekapan Customer', 'Customer Report Filter')}</CardTitle>
+                        <CardDescription>{t('Pilih customer untuk melihat rincian penjualan dan tagihan.', 'Select a customer to view their sales and statement details.')}</CardDescription>
                     </CardHeader>
                     <CardContent className="pt-6">
                         <div className="max-w-md space-y-2">
-                            <Label>{t('Pilih Pelanggan (PT)', 'Select Customer')}</Label>
+                            <Label>{t('Pilih Customer', 'Select Customer')}</Label>
                             <Select value={selectedCustomerId || ''} onValueChange={handleCustomerChange}>
                                 <SelectTrigger>
-                                    <SelectValue placeholder={t('--- Pilih Pelanggan ---', '--- Select Customer ---')} />
+                                    <SelectValue placeholder={t('--- Pilih Customer ---', '--- Select Customer ---')} />
                                 </SelectTrigger>
                                 <SelectContent>
                                     {customers.map(c => (

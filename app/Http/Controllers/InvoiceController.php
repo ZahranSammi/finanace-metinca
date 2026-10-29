@@ -6,9 +6,12 @@ use App\Models\Invoice;
 use App\Models\Order;
 use App\Models\Customer;
 use App\Models\Product;
+use App\Services\NotificationService;
 use App\Support\OrderStatus;
 use App\Support\Tax;
+use App\Support\UserRole;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
@@ -256,7 +259,7 @@ class InvoiceController extends Controller
 
     public function submit($id)
     {
-        $invoice = Invoice::findOrFail($id);
+        $invoice = Invoice::with('order.customer')->findOrFail($id);
 
         if ($invoice->status !== 'draft' && $invoice->status !== 'rejected') {
             return redirect()->back()->with('error', 'Only draft or rejected invoices can be submitted.');
@@ -267,11 +270,25 @@ class InvoiceController extends Controller
             'submitted_at' => now(),
         ]);
 
+        $invNumber = 'INV-' . str_pad((string) $invoice->id, 5, '0', STR_PAD_LEFT);
+        $senderName = Auth::user()?->name ?? 'Staff Sales';
+        $customerName = $invoice->order?->customer?->name ?? 'Customer';
+
+        NotificationService::notifyRole(
+            UserRole::ACCOUNTING,
+            'Invoice Baru Menunggu Validasi (' . $invNumber . ')',
+            $senderName . ' mengirim ' . $invNumber . ' untuk customer ' . $customerName . ' senilai Rp ' . number_format((float) $invoice->total_amount, 0, ',', '.') . ' ke Kotak Masuk Validasi.',
+            '/accounting/inbox',
+            'invoice_submitted',
+            Auth::id()
+        );
+
         return redirect()->back()->with('success', 'Invoice submitted to Accounting for validation.');
     }
+
     public function markAsLunas($id)
     {
-        $invoice = Invoice::findOrFail($id);
+        $invoice = Invoice::with('order.customer')->findOrFail($id);
         
         $invoice->update([
             'status' => 'lunas'
@@ -280,6 +297,19 @@ class InvoiceController extends Controller
         if ($invoice->order) {
             $invoice->order->update(['status' => 'lunas']);
         }
+
+        $invNumber = 'INV-' . str_pad((string) $invoice->id, 5, '0', STR_PAD_LEFT);
+        $senderName = Auth::user()?->name ?? 'Staff Sales';
+        $customerName = $invoice->order?->customer?->name ?? 'Customer';
+
+        NotificationService::notifyRole(
+            [UserRole::ACCOUNTING, UserRole::MANAGER],
+            'Pembayaran Invoice Lunas (' . $invNumber . ')',
+            $senderName . ' menandai pembayaran ' . $invNumber . ' (' . $customerName . ') senilai Rp ' . number_format((float) $invoice->total_amount, 0, ',', '.') . ' telah LUNAS.',
+            '/sales/invoice-rekap',
+            'invoice_paid',
+            Auth::id()
+        );
 
         return redirect()->back()->with('success', 'Invoice marked as Lunas.');
     }

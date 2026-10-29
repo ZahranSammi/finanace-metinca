@@ -44,7 +44,7 @@ export default function Rekap({ orders }: RekapProps) {
                         <TableHeader>
                             <TableRow>
                                 <TableHead>No. Invoice</TableHead>
-                                <TableHead>{t('Perusahaan (PT)', 'Company (PT)')}</TableHead>
+                                <TableHead>{t('Nama Customer', 'Customer Name')}</TableHead>
                                 <TableHead>{t('Tanggal Pembuatan', 'Date Raised')}</TableHead>
                                 <TableHead>{t('Tanggal Validasi', 'Date Validated')}</TableHead>
                                 <TableHead>{t('Sales Rep', 'Sales Rep')}</TableHead>
