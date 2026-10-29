@@ -12,8 +12,10 @@ use App\Models\Product;
 use App\Models\PurchaseOrder;
 use App\Models\Supplier;
 use App\Models\User;
+use App\Support\SpreadsheetReader;
 use App\Support\UserRole;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
 
 uses(RefreshDatabase::class);
 
@@ -177,3 +179,107 @@ test('balance sheet (laporan neraca) page renders balanced aktiva and pasiva', f
     expect($neracaReport)->not->toBeNull();
     expect(AppNotification::where('user_id', $this->managerUser->id)->where('type', 'neraca_submitted')->exists())->toBeTrue();
 });
+
+test('excel invoice import saves automatically to database and prevents duplicate invoices', function () {
+    // 1. Download template endpoint works
+    $templateRes = $this->actingAs($this->salesUser)->get('/invoices/template');
+    $templateRes->assertStatus(200);
+
+    // 2. Build an .xlsx file with 2 invoices + 1 internal duplicate row
+    $headers = [
+        'No Referensi / Invoice',
+        'Nama Pelanggan (Customer)',
+        'Email Customer',
+        'Tipe Invoice (domestik/international)',
+        'Mata Uang (IDR/USD/EUR)',
+        'Kurs (Exchange Rate)',
+        'Kode Produk',
+        'Nama Produk',
+        'Qty',
+        'Harga Satuan',
+        'PPN (%)',
+        'Uang Muka / DP',
+        'Terms',
+    ];
+    $rows = [
+        [
+            'INV-XLS-101',
+            'PT Astra Otoparts Tbk',
+            'astra@example.com',
+            'domestik',
+            'IDR',
+            1,
+            'MTC-001',
+            'Steel Flange 10 Inch',
+            5,
+            500000,
+            11,
+            0,
+            'Net 30',
+        ],
+        // Internal exact duplicate row in the same Excel file (should be skipped automatically)
+        [
+            'INV-XLS-101',
+            'PT Astra Otoparts Tbk',
+            'astra@example.com',
+            'domestik',
+            'IDR',
+            1,
+            'MTC-001',
+            'Steel Flange 10 Inch',
+            5,
+            500000,
+            11,
+            0,
+            'Net 30',
+        ],
+        // Second invoice with a brand-new Customer and Product (auto-created in DB)
+        [
+            'INV-XLS-102',
+            'PT Krakatau Pipe Industries',
+            'krakatau@example.com',
+            'domestik',
+            'IDR',
+            1,
+            'MTC-999',
+            'Heavy Duty Valve DN100',
+            2,
+            1250000,
+            11,
+            100000,
+            'Net 30',
+        ],
+    ];
+
+    $xlsxBinary = SpreadsheetReader::generateXlsx($headers, $rows, 'Import Invoice');
+    $file = UploadedFile::fake()->createWithContent('import_invoices.xlsx', $xlsxBinary);
+
+    $response = $this->actingAs($this->salesUser)->post('/invoices/import', [
+        'excel_file' => $file,
+        'default_action' => 'submit',
+    ]);
+
+    $response->assertRedirect(route('sales.invoice_rekap'));
+    $response->assertSessionHas('success');
+
+    // Verify 2 invoices were created in DB and the internal duplicate row was not doubled
+    expect(Invoice::count())->toBe(2);
+    expect(Customer::where('name', 'PT Krakatau Pipe Industries')->exists())->toBeTrue();
+    expect(Product::where('code', 'MTC-999')->exists())->toBeTrue();
+
+    $firstOrder = Order::where('customer_id', $this->customer->id)->first();
+    $firstInvoice = Invoice::where('order_id', $firstOrder->id)->first();
+    expect($firstInvoice)->not->toBeNull()
+        ->and((float) $firstInvoice->subtotal)->toBe(2500000.0); // 5 * 500,000 (not 10 * 500,000)
+
+    // 3. Re-importing the exact same Excel file detects all invoices as existing duplicates in DB
+    $fileAgain = UploadedFile::fake()->createWithContent('import_invoices_again.xlsx', $xlsxBinary);
+    $dupResponse = $this->actingAs($this->salesUser)->post('/invoices/import', [
+        'excel_file' => $fileAgain,
+        'default_action' => 'submit',
+    ]);
+
+    $dupResponse->assertSessionHas('error');
+    expect(Invoice::count())->toBe(2); // Count remains 2, no duplicate inserted!
+});
+

@@ -221,14 +221,21 @@ export default function ManagerNeraca({
                 {/* Print Header (Only visible when printing) */}
                 <div className="hidden border-b-2 border-slate-900 pb-4 print:block">
                     <div className="flex items-center justify-between">
-                        <div>
-                            <h2 className="text-xl font-bold uppercase">PT. Metinca Prima Industrial Works</h2>
-                            <p className="text-sm font-semibold text-slate-700">
-                                LAPORAN POSISI KEUANGAN (NERACA / BALANCE SHEET)
-                            </p>
-                            <p className="text-xs text-slate-500">
-                                Per Tanggal Cut-off: {cutoff_date} (Periode {period_label})
-                            </p>
+                        <div className="flex items-center gap-3">
+                            <img
+                                src="/Logo-metinca.webp"
+                                alt="PT. Metinca Prima Industrial Works"
+                                className="h-12 w-auto object-contain"
+                            />
+                            <div>
+                                <h2 className="text-xl font-bold uppercase">PT. Metinca Prima Industrial Works</h2>
+                                <p className="text-sm font-semibold text-slate-700">
+                                    LAPORAN POSISI KEUANGAN (NERACA / BALANCE SHEET)
+                                </p>
+                                <p className="text-xs text-slate-500">
+                                    Per Tanggal Cut-off: {cutoff_date} (Periode {period_label})
+                                </p>
+                            </div>
                         </div>
                         <div className="text-right text-xs text-slate-600">
                             <p>Status: {neraca.is_balanced ? 'SEIMBANG (BALANCED)' : 'PERLU REKONSILIASI'}</p>
@@ -264,8 +271,12 @@ export default function ManagerNeraca({
                             />
                         </div>
 
-                        <Button variant="outline" onClick={handleExportCsv} className="gap-1.5">
-                            <Download className="size-4" />
+                        <Button
+                            variant="outline"
+                            onClick={handleExportCsv}
+                            className="gap-1.5 border-emerald-200 bg-emerald-50/50 text-emerald-700 hover:bg-emerald-100/70"
+                        >
+                            <FileSpreadsheet className="size-4 text-emerald-600" />
                             Export CSV
                         </Button>
 

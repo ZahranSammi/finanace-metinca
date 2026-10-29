@@ -4,6 +4,7 @@ import {
     Clock,
     Download,
     Eye,
+    FileSpreadsheet,
     FileText,
     PackageCheck,
     Plus,
@@ -389,9 +390,9 @@ export default function PurchaseOrdersIndex({
 
                 {/* Header */}
                 <div className="flex flex-col justify-between gap-4 md:flex-row md:items-center">
-                    <div>
+                    <div className="min-w-0 flex-1">
                         <h1 className="flex items-center gap-2.5 text-2xl font-bold tracking-tight text-slate-900 dark:text-white">
-                            <ShoppingBag className="size-7 text-indigo-600" />
+                            <ShoppingBag className="size-7 shrink-0 text-indigo-600" />
                             {language === 'id'
                                 ? 'Purchase Order (PO) & Pengadaan Supplier'
                                 : 'Purchase Orders & Supplier Procurement'}
@@ -402,9 +403,13 @@ export default function PurchaseOrdersIndex({
                                 : 'Manage raw material & industrial goods procurement and Manager Accounting approval workflow.'}
                         </p>
                     </div>
-                    <div className="flex flex-wrap items-center gap-2">
-                        <Button variant="outline" onClick={handleExportCsv} className="gap-1.5">
-                            <Download className="size-4" />
+                    <div className="flex shrink-0 flex-wrap items-center gap-2">
+                        <Button
+                            variant="outline"
+                            onClick={handleExportCsv}
+                            className="gap-1.5 border-emerald-200 bg-emerald-50/50 text-emerald-700 hover:bg-emerald-100/70 dark:border-emerald-900/50 dark:bg-emerald-950/30 dark:text-emerald-300"
+                        >
+                            <FileSpreadsheet className="size-4 text-emerald-600 dark:text-emerald-400" />
                             Export CSV
                         </Button>
                         <Button
@@ -987,16 +992,23 @@ export default function PurchaseOrdersIndex({
                     {selectedPo && (
                         <div className="space-y-5">
                             <div className="flex items-start justify-between border-b-2 border-slate-900 pb-4">
-                                <div>
-                                    <p className="text-[11px] font-bold tracking-widest text-indigo-600 uppercase">
-                                        PT. Metinca Prima Industrial Works
-                                    </p>
-                                    <h3 className="text-xl font-bold text-slate-900 dark:text-white">
-                                        PURCHASE ORDER — {selectedPo.po_number}
-                                    </h3>
-                                    <p className="text-xs text-slate-500">
-                                        Plant Tujuan: {selectedPo.plant_name} ({selectedPo.branch_name})
-                                    </p>
+                                <div className="flex items-center gap-3">
+                                    <img
+                                        src="/Logo-metinca.webp"
+                                        alt="PT. Metinca Prima Industrial Works"
+                                        className="h-12 w-auto object-contain"
+                                    />
+                                    <div>
+                                        <p className="text-[11px] font-bold tracking-widest text-indigo-600 uppercase">
+                                            PT. Metinca Prima Industrial Works
+                                        </p>
+                                        <h3 className="text-xl font-bold text-slate-900 dark:text-white">
+                                            PURCHASE ORDER — {selectedPo.po_number}
+                                        </h3>
+                                        <p className="text-xs text-slate-500">
+                                            Plant Tujuan: {selectedPo.plant_name} ({selectedPo.branch_name})
+                                        </p>
+                                    </div>
                                 </div>
                                 <div className="text-right">
                                     {renderStatusBadge(selectedPo.status)}

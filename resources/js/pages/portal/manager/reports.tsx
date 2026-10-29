@@ -3,6 +3,7 @@ import {
     ClipboardList,
     Check,
     X,
+    FileSpreadsheet,
     FileText,
     Calendar,
     Printer,
@@ -371,9 +372,12 @@ export default function ReportsInbox({ reports }: ReportsProps) {
             </head>
             <body>
                 <div class="header">
-                    <div>
-                        <div class="title">PT. METINCA PRIMA INDUSTRIAL WORKS</div>
-                        <div class="subtitle">Laporan Detail Keuangan, Penjualan, Customer & Pengadaan</div>
+                    <div style="display:flex;align-items:center;gap:14px;">
+                        <img src="/Logo-metinca.webp" alt="Logo Metinca" style="height:48px;width:auto;object-fit:contain;" />
+                        <div>
+                            <div class="title">PT. METINCA PRIMA INDUSTRIAL WORKS</div>
+                            <div class="subtitle">Laporan Detail Keuangan, Penjualan, Customer & Pengadaan</div>
+                        </div>
                     </div>
                     <div style="text-align:right">
                         <div style="font-size:14px;font-weight:bold;color:#2563eb;">LAPORAN ${selectedReport.type === 'monthly' ? 'BULANAN' : 'TAHUNAN'}</div>
@@ -513,9 +517,9 @@ export default function ReportsInbox({ reports }: ReportsProps) {
                                 variant="outline"
                                 size="sm"
                                 onClick={handleExportCsv}
-                                className="gap-1.5"
+                                className="gap-1.5 border-emerald-200 bg-emerald-50/50 text-emerald-700 hover:bg-emerald-100/70"
                             >
-                                <Download className="size-4" />
+                                <FileSpreadsheet className="size-4 text-emerald-600" />
                                 {t('Export CSV', 'Export CSV')}
                             </Button>
                         </div>

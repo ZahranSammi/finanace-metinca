@@ -17,6 +17,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('dashboard', [SalesPortalController::class, 'dashboard'])->name('dashboard');
 
     // In-App Notifications (all authenticated actors)
+    Route::get('notifications', [NotificationController::class, 'index'])->name('notifications.index');
     Route::post('notifications/read-all', [NotificationController::class, 'markAllAsRead'])->name('notifications.read_all');
     Route::post('notifications/{id}/read', [NotificationController::class, 'markAsRead'])->name('notifications.read');
 
@@ -35,6 +36,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('purchase-orders/{id}/pay', [PurchaseOrderController::class, 'pay'])->name('purchase_orders.pay');
 
         Route::get('sales/invoice-rekap', [InvoiceController::class, 'index'])->name('sales.invoice_rekap');
+        Route::get('invoices/template', [InvoiceController::class, 'downloadTemplate'])->name('invoices.template');
+        Route::post('invoices/import', [InvoiceController::class, 'importExcel'])->name('invoices.import');
     });
 
     Route::middleware(['role:staff_sales,staff_accounting'])->group(function () {

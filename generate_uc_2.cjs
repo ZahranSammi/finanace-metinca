@@ -20,20 +20,24 @@ rectangle "Use Case Usulan Perekapan Penjualan & Akuntansi" {
   
   usecase "Menginput & Mengirim Invoice" as uc1
   usecase "Menandai Invoice Lunas" as uc2
+  usecase "Mengajukan Retur / Barang Reject" as uc_ret1
   usecase "Membuat & Mengajukan Purchase Order (PO)" as uc_po1
   
   usecase "Memvalidasi / Menolak Invoice" as uc3
+  usecase "Menyetujui / Menolak Retur Barang" as uc_ret2
   usecase "Membuat & Mengirim Laporan Detail & Neraca" as uc4
   
-  usecase "Meninjau & Memvalidasi Laporan & Neraca" as uc5
+  usecase "Meninjau & Memvalidasi Laporan Detail & Neraca" as uc5
   usecase "Menyetujui / Menolak Purchase Order (PO)" as uc_po2
   
   usecase "Logout" as logout
 
   uc1 ..> login : <<include>>
   uc2 ..> login : <<include>>
+  uc_ret1 ..> login : <<include>>
   uc_po1 ..> login : <<include>>
   uc3 ..> login : <<include>>
+  uc_ret2 ..> login : <<include>>
   uc4 ..> login : <<include>>
   uc5 ..> login : <<include>>
   uc_po2 ..> login : <<include>>
@@ -42,10 +46,12 @@ rectangle "Use Case Usulan Perekapan Penjualan & Akuntansi" {
 
 sales --> uc1
 sales --> uc2
+sales --> uc_ret1
 sales --> uc_po1
 sales --> logout
 
 acc --> uc3
+acc --> uc_ret2
 acc --> uc4
 acc --> uc_po1
 acc --> logout

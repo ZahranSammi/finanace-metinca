@@ -87,7 +87,18 @@ class MasterDataSeeder extends Seeder
             ?? User::where('role', UserRole::SALES)->first();
         $managerUser = User::where('role', UserRole::MANAGER)->first();
 
-        if (PurchaseOrder::count() === 0 && $dbProducts->count() > 0 && $dbSuppliers->count() > 0 && $dbPlants->count() > 0) {
+        if ($dbProducts->count() > 0 && $dbSuppliers->count() > 0 && $dbPlants->count() > 0) {
+            // Backfill legacy PO records that have no po_number
+            PurchaseOrder::whereNull('po_number')->get()->each(function (PurchaseOrder $legacyPo) use ($accountingUser, $managerUser) {
+                $legacyPo->update([
+                    'po_number' => 'PO-2026-' . str_pad((string) $legacyPo->id, 3, '0', STR_PAD_LEFT),
+                    'expected_date' => $legacyPo->expected_date ?? ($legacyPo->date ? $legacyPo->date->copy()->addDays(7)->toDateString() : now()->addDays(7)->toDateString()),
+                    'created_by' => $legacyPo->created_by ?? $accountingUser?->id,
+                    'approved_by' => $legacyPo->approved_by ?? (in_array($legacyPo->status, ['Approved', 'Received']) ? $managerUser?->id : null),
+                    'payment_status' => $legacyPo->status === 'Received' ? 'paid' : ($legacyPo->payment_status ?? 'unpaid'),
+                ]);
+            });
+
             $samplePOs = [
                 [
                     'po_number' => 'PO-2026-033',
@@ -195,6 +206,9 @@ class MasterDataSeeder extends Seeder
             ];
 
             foreach ($samplePOs as $poData) {
+                if (PurchaseOrder::where('po_number', $poData['po_number'])->exists()) {
+                    continue;
+                }
                 $supplier = $dbSuppliers[$poData['supplier']] ?? $dbSuppliers->first();
                 $plant = $dbPlants[$poData['plant_idx']] ?? $dbPlants->first();
 

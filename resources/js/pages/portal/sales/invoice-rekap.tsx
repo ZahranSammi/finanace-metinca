@@ -1,5 +1,15 @@
-import { Head, router, Link } from '@inertiajs/react';
-import { FileText, Plus, Eye, Printer, Download } from 'lucide-react';
+import { Head, router, Link, usePage } from '@inertiajs/react';
+import {
+    FileText,
+    Plus,
+    Eye,
+    Printer,
+    Download,
+    FileSpreadsheet,
+    Upload,
+    CheckCircle2,
+    AlertTriangle,
+} from 'lucide-react';
 import * as React from 'react';
 import { useCurrency } from '@/components/currency-context';
 import { useLanguage } from '@/components/language-context';
@@ -40,7 +50,84 @@ interface InvoiceRekapProps {
 export default function InvoiceRekap({ invoices }: InvoiceRekapProps) {
     const { formatPrice } = useCurrency();
     const { t } = useLanguage();
+    const { props } = usePage<{
+        flash?: { success?: string; error?: string };
+    }>();
     const [selectedInvoice, setSelectedInvoice] = React.useState<InvoiceItem | null>(null);
+    const [isImporting, setIsImporting] = React.useState(false);
+    const fileInputRef = React.useRef<HTMLInputElement | null>(null);
+
+    const handleExportCsv = () => {
+        const headers = [
+            'ID Invoice',
+            'ID Order / PO',
+            'Tanggal',
+            'Nama Pelanggan (Customer)',
+            'Sales Rep',
+            'Jenis Invoice',
+            'Mata Uang',
+            'Kurs (Rate)',
+            'Subtotal (IDR)',
+            'PPN (%)',
+            'Nilai PPN (IDR)',
+            'DP / Uang Muka (IDR)',
+            'Total Tagihan (IDR)',
+            'Status',
+        ];
+        const rows = invoices.map((inv) => [
+            inv.id,
+            inv.order_id,
+            inv.created_at,
+            inv.customer_name,
+            inv.sales_rep || '-',
+            inv.invoice_type,
+            inv.currency,
+            inv.exchange_rate,
+            inv.subtotal,
+            inv.tax_percent,
+            inv.tax_amount,
+            inv.dp_amount,
+            inv.total_amount,
+            inv.status,
+        ]);
+
+        const csvContent =
+            'data:text/csv;charset=utf-8,' +
+            [
+                headers.join(','),
+                ...rows.map((r) => r.map((v) => `"${String(v ?? '').replace(/"/g, '""')}"`).join(',')),
+            ].join('\n');
+
+        const link = document.createElement('a');
+        link.setAttribute('href', encodeURI(csvContent));
+        link.setAttribute('download', `Riwayat_Invoice_Metinca_${new Date().toISOString().split('T')[0]}.csv`);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    };
+
+    const handleQuickImportExcel = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        setIsImporting(true);
+        router.post(
+            '/invoices/import',
+            {
+                excel_file: file,
+                default_action: 'submit',
+            },
+            {
+                forceFormData: true,
+                preserveScroll: true,
+                onFinish: () => {
+                    setIsImporting(false);
+                    if (fileInputRef.current) {
+                        fileInputRef.current.value = '';
+                    }
+                },
+            },
+        );
+    };
 
     const formatPriceWithCurrency = (amount: number, currencyCode: string) => {
         if (currencyCode === 'USD') {
@@ -365,18 +452,61 @@ export default function InvoiceRekap({ invoices }: InvoiceRekapProps) {
         <>
             <Head title={t('Riwayat Invoice', 'Invoice History')} />
             <div className="flex flex-1 flex-col gap-6 p-6">
+                {props.flash?.success && (
+                    <div className="flex items-start gap-2.5 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-800 shadow-xs dark:border-emerald-900/50 dark:bg-emerald-950/30 dark:text-emerald-300">
+                        <CheckCircle2 className="mt-0.5 size-4 shrink-0 text-emerald-600" />
+                        <span>{props.flash.success}</span>
+                    </div>
+                )}
+                {props.flash?.error && (
+                    <div className="flex items-start gap-2.5 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-medium text-rose-800 shadow-xs dark:border-rose-900/50 dark:bg-rose-950/30 dark:text-rose-300">
+                        <AlertTriangle className="mt-0.5 size-4 shrink-0 text-rose-600" />
+                        <span>{props.flash.error}</span>
+                    </div>
+                )}
+
                 <div className="flex flex-col justify-between gap-4 md:flex-row md:items-center">
-                    <div>
+                    <div className="min-w-0 flex-1">
                         <h1 className="text-3xl font-bold tracking-tight">{t('Riwayat Invoice', 'Invoice History')}</h1>
                         <p className="text-muted-foreground text-sm">
                             {t('Kelola dan lihat rincian invoice yang telah Anda masukkan, baik Domestik maupun Ekspor.', 'Manage and view details of invoices you have entered, both Domestic and Export.')}
                         </p>
                     </div>
-                    <Button asChild className="w-full md:w-auto flex items-center justify-center gap-1">
-                        <Link href="/invoices/create">
-                            <Plus className="size-4" /> {t('Input Invoice Baru', 'New Invoice Entry')}
-                        </Link>
-                    </Button>
+                    <div className="flex shrink-0 flex-wrap items-center gap-2">
+                        <input
+                            ref={fileInputRef}
+                            type="file"
+                            accept=".xlsx,.xls,.csv"
+                            onChange={handleQuickImportExcel}
+                            className="hidden"
+                        />
+                        <Button
+                            type="button"
+                            variant="outline"
+                            onClick={handleExportCsv}
+                            className="gap-1.5 border-emerald-200 bg-emerald-50/50 text-emerald-700 hover:bg-emerald-100/70 dark:border-emerald-900/50 dark:bg-emerald-950/30 dark:text-emerald-300"
+                        >
+                            <FileSpreadsheet className="size-4 text-emerald-600 dark:text-emerald-400" />
+                            Export CSV
+                        </Button>
+                        <Button
+                            type="button"
+                            variant="outline"
+                            disabled={isImporting}
+                            onClick={() => fileInputRef.current?.click()}
+                            className="gap-1.5 border-blue-200 bg-blue-50/50 text-blue-700 hover:bg-blue-100/70 dark:border-blue-900/50 dark:bg-blue-950/30 dark:text-blue-300"
+                        >
+                            <Upload className="size-4 text-blue-600 dark:text-blue-400" />
+                            {isImporting
+                                ? t('Mengimpor Excel...', 'Importing Excel...')
+                                : t('Import Excel ke DB', 'Import Excel to DB')}
+                        </Button>
+                        <Button asChild className="flex items-center justify-center gap-1.5">
+                            <Link href="/invoices/create">
+                                <Plus className="size-4" /> {t('Input / Import Invoice Baru', 'New / Import Invoice')}
+                            </Link>
+                        </Button>
+                    </div>
                 </div>
 
                 {/* Info Cards */}

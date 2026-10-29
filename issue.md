@@ -270,26 +270,26 @@ Selain 6 poin spesifik di atas, revisi seminar CP menuntut konsistensi penuh ant
 
 ## Urutan Tahapan Eksekusi (Implementation Roadmap)
 
-- [ ] **Tahap 1 — Perbaikan Labeling & Profil Aktor (ISSUE-02 & ISSUE-03)**
-  - [ ] Update `UserSeeder.php` (`Manager User` $\rightarrow$ `Manager Accounting`) dan buat migrasi update user existing.
-  - [ ] Update `resources/js/components/user-info.tsx` & `dashboard.tsx` untuk menampilkan nama dan badge jabatan `Manager Accounting`, `Staff Accounting`, dan `Staff Sales`.
-  - [ ] Ubah seluruh label *"Rekapan per PT"* menjadi *"Rekapan Penjualan per Customer"* di `app-sidebar.tsx`, `customer-recap.tsx`, dan `sales/rekap.tsx`.
-- [ ] **Tahap 2 — Sistem Notifikasi Antar Aktor (ISSUE-01)**
-  - [ ] Buat migrasi & model `AppNotification` serta `NotificationService`.
-  - [ ] Buat `NotificationController` dan daftarkan rute `/notifications` di `routes/web.php`.
-  - [ ] Bagikan data notifikasi & badge counter melalui `HandleInertiaRequests.php`.
-  - [ ] Pasang pemicu notifikasi di `InvoiceController`, `AccountingController`, `ManagerController`, `ReturnController`, dan `PurchaseOrderController`.
-  - [ ] Tambahkan komponen Lonceng Notifikasi (*Notification Bell Popover*) di `app-sidebar-header.tsx`.
-- [ ] **Tahap 3 — Modul Menu Purchase Order / PO (ISSUE-05)**
-  - [ ] Buat migrasi penyempurnaan tabel `purchase_orders` (`po_number`, `expected_date`, `created_by`, `approved_by`, `notes`, `payment_status`) dan update `MasterDataSeeder.php`.
-  - [ ] Buat `PurchaseOrderController.php` (index, store, submit, approve, reject, receive/pay) dan rute di `routes/web.php`.
-  - [ ] Buat halaman `resources/js/pages/portal/purchase-orders/index.tsx` (lengkap dengan KPI Cards, Search, Filter Status, Modal Create PO, Detail/Print PO, Approve/Reject, dan Export CSV) serta tambahkan menunya di `app-sidebar.tsx`.
-- [ ] **Tahap 4 — Laporan Detail Manager Accounting (ISSUE-04)**
-  - [ ] Update `AccountingController@generateReport` dan `ManagerController@inbox` untuk menyertakan rincian transaksi invoice, rincian item produk, breakdown per customer, retur, dan ringkasan pajak/DP/piutang.
-  - [ ] Redesain halaman `resources/js/pages/portal/manager/reports.tsx` menjadi tampilan laporan detail berlapis (Multi-Tab + Tabel Rincian Invoice/Customer/Produk/Retur + Cetak PDF Resmi & Export CSV).
-- [ ] **Tahap 5 — Bagian Manajer Terkait Laporan Neraca (ISSUE-06)**
-  - [ ] Buat method `ManagerController@neraca` dan rute `GET /manager/neraca`.
-  - [ ] Buat halaman `resources/js/pages/portal/manager/neraca.tsx` (Neraca Aktiva vs Pasiva, indikator *Balanced*, drill-down rincian akun, filter periode, dan cetak PDF/Export CSV) serta tambahkan menu **Laporan Neraca** di `app-sidebar.tsx`.
-- [ ] **Tahap 6 — Verifikasi, Seeder Demo & Pengujian (ISSUE-07)**
-  - [ ] Update `erd.md` dan skrip diagram use case (`generate_uc.cjs` / `generate_uc_2.cjs`).
-  - [ ] Jalankan migrasi, seeder, build aset frontend (`npm run build`), dan pengujian fitur (*Pest / PHPUnit tests*).
+- [x] **Tahap 1 — Perbaikan Labeling & Profil Aktor (ISSUE-02 & ISSUE-03)**
+  - [x] Update `UserSeeder.php` (`Manager User` $\rightarrow$ `Manager Accounting`) dan buat migrasi update user existing.
+  - [x] Update `resources/js/components/user-info.tsx` & `dashboard.tsx` untuk menampilkan nama dan badge jabatan `Manager Accounting`, `Staff Accounting`, dan `Staff Sales`.
+  - [x] Ubah seluruh label *"Rekapan per PT"* menjadi *"Rekapan Penjualan per Customer"* di `app-sidebar.tsx`, `customer-recap.tsx`, dan `sales/rekap.tsx`.
+- [x] **Tahap 2 — Sistem Notifikasi Antar Aktor (ISSUE-01)**
+  - [x] Buat migrasi & model `AppNotification` serta `NotificationService`.
+  - [x] Buat `NotificationController` dan daftarkan rute `/notifications` di `routes/web.php`.
+  - [x] Bagikan data notifikasi & badge counter melalui `HandleInertiaRequests.php`.
+  - [x] Pasang pemicu notifikasi di `InvoiceController`, `AccountingController`, `ManagerController`, `ReturnController`, dan `PurchaseOrderController`.
+  - [x] Tambahkan komponen Lonceng Notifikasi (*Notification Bell Popover*) di `app-sidebar-header.tsx`.
+- [x] **Tahap 3 — Modul Menu Purchase Order / PO (ISSUE-05)**
+  - [x] Buat migrasi penyempurnaan tabel `purchase_orders` (`po_number`, `expected_date`, `created_by`, `approved_by`, `notes`, `payment_status`) dan update `MasterDataSeeder.php`.
+  - [x] Buat `PurchaseOrderController.php` (index, store, submit, approve, reject, receive/pay) dan rute di `routes/web.php`.
+  - [x] Buat halaman `resources/js/pages/portal/purchase-orders/index.tsx` (lengkap dengan KPI Cards, Search, Filter Status, Modal Create PO, Detail/Print PO, Approve/Reject, dan Export CSV) serta tambahkan menunya di `app-sidebar.tsx`.
+- [x] **Tahap 4 — Laporan Detail Manager Accounting (ISSUE-04)**
+  - [x] Update `AccountingController@generateReport` dan `ManagerController@inbox` untuk menyertakan rincian transaksi invoice, rincian item produk, breakdown per customer, retur, dan ringkasan pajak/DP/piutang.
+  - [x] Redesain halaman `resources/js/pages/portal/manager/reports.tsx` menjadi tampilan laporan detail berlapis (Multi-Tab + Tabel Rincian Invoice/Customer/Produk/Retur + Cetak PDF Resmi & Export CSV).
+- [x] **Tahap 5 — Bagian Manajer Terkait Laporan Neraca (ISSUE-06)**
+  - [x] Buat method `ManagerController@neraca` dan rute `GET /manager/neraca`.
+  - [x] Buat halaman `resources/js/pages/portal/manager/neraca.tsx` (Neraca Aktiva vs Pasiva, indikator *Balanced*, drill-down rincian akun, filter periode, dan cetak PDF/Export CSV) serta tambahkan menu **Laporan Neraca** di `app-sidebar.tsx`.
+- [x] **Tahap 6 — Verifikasi, Seeder Demo & Pengujian (ISSUE-07)**
+  - [x] Update `erd.md` dan skrip diagram use case (`generate_uc.cjs` / `generate_uc_2.cjs`).
+  - [x] Jalankan migrasi, seeder, build aset frontend (`npm run build`), dan pengujian fitur (*Pest / PHPUnit tests*).

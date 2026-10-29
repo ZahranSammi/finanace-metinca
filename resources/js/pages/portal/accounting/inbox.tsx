@@ -229,7 +229,13 @@ export default function Inbox({ invoices, reports }: InboxProps) {
                                             {reports.map(rep => (
                                                 <div key={rep.id} className="flex items-center justify-between p-3 bg-muted/40 border rounded-md text-sm">
                                                     <div>
-                                                        <span className="font-semibold">{rep.type === 'monthly' ? 'Bulanan' : 'Tahunan'}</span>
+                                                        <span className="font-semibold">
+                                                            {rep.type === 'monthly'
+                                                                ? 'Bulanan'
+                                                                : rep.type === 'neraca'
+                                                                  ? 'Laporan Neraca'
+                                                                  : 'Tahunan'}
+                                                        </span>
                                                         <span className="text-xs text-muted-foreground ml-2">({rep.period_start} - {rep.period_end})</span>
                                                     </div>
                                                     <div className="flex items-center gap-3">

@@ -182,7 +182,7 @@ CustomerRecap.layout = {
             href: '#',
         },
         {
-            title: 'Customer Recap',
+            title: 'Rekapan Penjualan per Customer',
             href: '/reports/customer-recap',
         },
     ],

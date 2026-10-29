@@ -36,7 +36,7 @@ class ReportController extends Controller
                     $daysLate = 0;
                     $penaltyAmount = 0;
                     
-                    if ($deadlineDate && $deadlineDate->isPast() && $inv->status !== 'Paid') {
+                    if ($deadlineDate && $deadlineDate->isPast() && ! in_array(strtolower((string) $inv->status), ['paid', 'lunas', 'draft', 'rejected'], true)) {
                         $daysLate = $today->diffInDays($deadlineDate);
                         // Penalty example: 0.1% per day late
                         $penaltyAmount = $inv->total_amount * 0.001 * $daysLate;
